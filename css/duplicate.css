@@ -1,0 +1,349 @@
+/**
+ * Duplicate Content CSS
+ *
+ * @package Parisii_Optique
+ */
+
+/* Duplicate Links */
+.duplicate-link {
+  @apply inline-flex items-center gap-2 transition-all duration-200;
+}
+
+.duplicate-link:hover {
+  @apply transform scale-105;
+}
+
+.duplicate-link:active {
+  @apply transform scale-95;
+}
+
+.duplicate-link.loading {
+  @apply opacity-50 pointer-events-none;
+}
+
+.duplicate-link.loading .dashicons {
+  @apply animate-spin;
+}
+
+/* Duplicate Multiple */
+.duplicate-multiple {
+  @apply space-y-4;
+}
+
+.duplicate-multiple-btn {
+  @apply inline-flex items-center gap-2 transition-all duration-200;
+}
+
+.duplicate-multiple-btn:hover {
+  @apply transform scale-105;
+}
+
+.duplicate-multiple-btn:active {
+  @apply transform scale-95;
+}
+
+.duplicate-multiple-btn:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Progress Bar */
+.duplicate-progress {
+  @apply w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden;
+}
+
+.progress-bar {
+  @apply relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full;
+}
+
+.progress-fill {
+  @apply h-full bg-main-500 transition-all duration-300 ease-out;
+}
+
+.progress-text {
+  @apply text-sm text-gray-600 dark:text-gray-400 mt-1;
+}
+
+/* Duplicate Messages */
+.duplicate-message {
+  @apply fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg max-w-sm;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.duplicate-message-success {
+  @apply bg-green-500 text-white;
+}
+
+.duplicate-message-error {
+  @apply bg-red-500 text-white;
+}
+
+.duplicate-message-warning {
+  @apply bg-yellow-500 text-white;
+}
+
+.duplicate-message-info {
+  @apply bg-blue-500 text-white;
+}
+
+/* Admin Bar Duplicate */
+#wp-admin-bar-duplicate .ab-item {
+  @apply flex items-center gap-2;
+}
+
+#wp-admin-bar-duplicate .ab-icon {
+  @apply text-base;
+}
+
+/* Post List Duplicate */
+.duplicate-row-link {
+  @apply inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-main-500 transition-colors;
+}
+
+.duplicate-row-link .dashicons {
+  @apply text-sm;
+}
+
+/* Category Duplicate */
+.category-duplicate {
+  @apply mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg;
+}
+
+.product-duplicate {
+  @apply mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg;
+}
+
+/* Duplicate Buttons in Admin */
+.duplicate-action {
+  @apply inline-flex items-center gap-2 text-sm text-gray-600 hover:text-main-500 transition-colors;
+}
+
+.duplicate-action .dashicons {
+  @apply text-base;
+}
+
+/* Duplicate Form Styles */
+.duplicate-form {
+  @apply space-y-4;
+}
+
+.duplicate-form .form-group {
+  @apply space-y-2;
+}
+
+.duplicate-form label {
+  @apply block text-sm font-medium text-gray-700 dark:text-gray-300;
+}
+
+.duplicate-form select,
+.duplicate-form input[type="text"],
+.duplicate-form input[type="number"] {
+  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-main-500 focus:border-main-500;
+}
+
+.duplicate-form .checkbox-group {
+  @apply space-y-2;
+}
+
+.duplicate-form .checkbox-group label {
+  @apply flex items-center gap-2;
+}
+
+.duplicate-form .checkbox-group input[type="checkbox"] {
+  @apply w-4 h-4 text-main-500 border-gray-300 rounded focus:ring-main-500;
+}
+
+/* Duplicate Status Indicators */
+.duplicate-status {
+  @apply inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.duplicate-status-success {
+  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
+}
+
+.duplicate-status-error {
+  @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
+}
+
+.duplicate-status-pending {
+  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200;
+}
+
+/* Duplicate Bulk Actions */
+.duplicate-bulk-actions {
+  @apply flex items-center gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg;
+}
+
+.duplicate-bulk-actions select {
+  @apply px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white;
+}
+
+.duplicate-bulk-actions button {
+  @apply px-4 py-2 bg-main-500 text-white rounded-md hover:bg-main-600 transition-colors;
+}
+
+/* Duplicate History */
+.duplicate-history {
+  @apply space-y-2;
+}
+
+.duplicate-history-item {
+  @apply flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg;
+}
+
+.duplicate-history-item .item-info {
+  @apply flex items-center gap-3;
+}
+
+.duplicate-history-item .item-title {
+  @apply font-medium text-gray-900 dark:text-white;
+}
+
+.duplicate-history-item .item-meta {
+  @apply text-sm text-gray-500 dark:text-gray-400;
+}
+
+.duplicate-history-item .item-actions {
+  @apply flex items-center gap-2;
+}
+
+/* Duplicate Settings */
+.duplicate-settings {
+  @apply space-y-6;
+}
+
+.duplicate-settings .setting-group {
+  @apply space-y-4;
+}
+
+.duplicate-settings .setting-group h3 {
+  @apply text-lg font-semibold text-gray-900 dark:text-white;
+}
+
+.duplicate-settings .setting-item {
+  @apply flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg;
+}
+
+.duplicate-settings .setting-item .setting-info {
+  @apply flex-1;
+}
+
+.duplicate-settings .setting-item .setting-title {
+  @apply font-medium text-gray-900 dark:text-white;
+}
+
+.duplicate-settings .setting-item .setting-description {
+  @apply text-sm text-gray-500 dark:text-gray-400 mt-1;
+}
+
+.duplicate-settings .setting-item .setting-control {
+  @apply ml-4;
+}
+
+/* Animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .duplicate-message {
+    @apply top-2 right-2 left-2 max-w-none;
+  }
+  
+  .duplicate-bulk-actions {
+    @apply flex-col items-stretch;
+  }
+  
+  .duplicate-history-item {
+    @apply flex-col items-start gap-2;
+  }
+  
+  .duplicate-history-item .item-actions {
+    @apply w-full justify-end;
+  }
+}
+
+/* Dark Mode Adjustments */
+.dark .duplicate-link {
+  @apply text-gray-300 hover:text-white;
+}
+
+.dark .duplicate-multiple-btn {
+  @apply text-gray-300 hover:text-white;
+}
+
+.dark .duplicate-row-link {
+  @apply text-gray-400 hover:text-main-400;
+}
+
+/* Focus Styles for Accessibility */
+.duplicate-link:focus-visible,
+.duplicate-multiple-btn:focus-visible,
+.duplicate-row-link:focus-visible {
+  @apply outline-2 outline-main-500 outline-offset-2;
+}
+
+/* Print Styles */
+@media print {
+  .duplicate-link,
+  .duplicate-multiple,
+  .duplicate-message,
+  .duplicate-bulk-actions {
+    @apply hidden;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .duplicate-link,
+  .duplicate-multiple-btn {
+    @apply border-2 border-current;
+  }
+  
+  .duplicate-message {
+    @apply border-2 border-current;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .duplicate-link,
+  .duplicate-multiple-btn {
+    @apply transition-none;
+  }
+  
+  .duplicate-link:hover,
+  .duplicate-multiple-btn:hover {
+    @apply transform-none;
+  }
+  
+  .duplicate-link:active,
+  .duplicate-multiple-btn:active {
+    @apply transform-none;
+  }
+  
+  .duplicate-message {
+    animation: none;
+  }
+  
+  .duplicate-link.loading .dashicons {
+    @apply animate-none;
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "parisii-optique-theme",
+  "version": "1.0.0",
+  "description": "Thème WordPress personnalisé pour Parisii Optique",
+  "scripts": {
+    "build": "npx @tailwindcss/cli -i ./src/input.css -o ./dist/style.css --minify && npm run build:blocks",
+    "build:prod": "npx @tailwindcss/cli -i ./src/input.css -o ./dist/style.css --minify && npm run build:blocks",
+    "watch": "npx @tailwindcss/cli -i ./src/input.css -o ./dist/style.css --watch",
+    "dev": "npx @tailwindcss/cli -i ./src/input.css -o ./dist/style.css --watch",
+    "build:blocks": "wp-scripts build blocks/index.js --output-path=blocks/dist",
+    "start:blocks": "wp-scripts start blocks/index.js --output-path=blocks/dist"
+  },
+  "dependencies": {
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tailwindcss/cli": "^4.1.13",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10",
+    "embla-carousel": "^8.6.0",
+    "embla-carousel-autoplay": "^8.6.0",
+    "postcss": "^8.4.32"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^27.0.0",
+    "autoprefixer": "^10.4.16"
+  }
+}

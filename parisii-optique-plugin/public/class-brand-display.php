@@ -1,0 +1,194 @@
+<?php
+/**
+ * Brand Display class
+ *
+ * @package Parisii_Optique_Plugin
+ */
+
+// Exit if accessed directly
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class Parisii_Optique_Brand_Display {
+    
+    public function __construct() {
+        // No hooks needed yet, methods will be called directly from template
+    }
+    
+    /**
+     * Get filtered brands
+     */
+    public static function get_filtered_brands() {
+        $args = array(
+            'visible_only' => true,
+            'orderby' => 'name',
+            'order' => 'ASC',
+        );
+        
+        // Search filter
+        if (!empty($_GET['brand_search'])) {
+            $args['search'] = sanitize_text_field($_GET['brand_search']);
+        }
+        
+        // Get all brands first
+        $brands = Parisii_Optique_Brand::get_all($args);
+        
+        // Category filter
+        if (!empty($_GET['brand_categories']) && is_array($_GET['brand_categories'])) {
+            $filtered_brands = array();
+            $category_ids = array_map('absint', $_GET['brand_categories']);
+            
+            foreach ($brands as $brand) {
+                $brand_categories = Parisii_Optique_Brand::get_categories($brand->id);
+                $brand_category_ids = array_map(function($cat) { return $cat->id; }, $brand_categories);
+                
+                // Check if brand has any of the selected categories
+                if (array_intersect($category_ids, $brand_category_ids)) {
+                    $filtered_brands[] = $brand;
+                }
+            }
+            
+            $brands = $filtered_brands;
+        }
+        
+        return $brands;
+    }
+    
+    /**
+     * Get all categories for filter
+     */
+    public static function get_filter_categories() {
+        return Parisii_Optique_Brand_Category::get_all();
+    }
+    
+    /**
+     * Render filter sidebar
+     */
+    public static function render_filter_sidebar() {
+        $categories = self::get_filter_categories();
+        $selected_categories = isset($_GET['brand_categories']) && is_array($_GET['brand_categories']) ? array_map('absint', $_GET['brand_categories']) : array();
+        $search_query = isset($_GET['brand_search']) ? sanitize_text_field($_GET['brand_search']) : '';
+        
+        ?>
+        <aside class="w-full">
+            <div class="card lg:sticky lg:top-24">
+                <h3 class="text-lg font-heading font-semibold mb-4"><?php _e('Filtrer les marques', 'parisii-optique-plugin'); ?></h3>
+                
+                <form method="get">
+                    <!-- Preserve page ID -->
+                    <input type="hidden" name="page_id" value="<?php echo get_the_ID(); ?>">
+                    
+                    <!-- Search input -->
+                    <div class="mb-4">
+                        <label for="brand_search" class="block text-sm font-medium mb-2">
+                            <?php _e('Rechercher', 'parisii-optique-plugin'); ?>
+                        </label>
+                        <input 
+                            type="search" 
+                            id="brand_search" 
+                            name="brand_search" 
+                            value="<?php echo esc_attr($search_query); ?>"
+                            placeholder="<?php esc_attr_e('Nom de la marque...', 'parisii-optique-plugin'); ?>"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-main-500 focus:border-main-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                        >
+                    </div>
+                    
+                    <!-- Category filters -->
+                    <?php if (!empty($categories)) : ?>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-2">
+                                <?php _e('Catégories', 'parisii-optique-plugin'); ?>
+                            </label>
+                            <div class="max-h-48 overflow-y-auto space-y-2">
+                                <?php foreach ($categories as $category) : ?>
+                                    <label class="flex items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-1 rounded transition-colors">
+                                        <input 
+                                            type="checkbox" 
+                                            name="brand_categories[]" 
+                                            value="<?php echo esc_attr($category->id); ?>"
+                                            <?php checked(in_array($category->id, $selected_categories)); ?>
+                                            class="mr-2 rounded border-gray-300 text-main-500 focus:ring-main-500"
+                                        >
+                                        <span class="text-sm"><?php echo esc_html($category->name); ?></span>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <!-- Submit buttons -->
+                    <div class="flex gap-2">
+                        <button type="submit" class="flex-1 px-4 py-2 bg-main-500 hover:bg-main-600 text-white rounded-lg font-medium transition-colors duration-200 focus:ring-2 focus:ring-main-500 focus:ring-offset-2">
+                            <?php _e('Filtrer', 'parisii-optique-plugin'); ?>
+                        </button>
+                        <a href="<?php echo get_permalink(); ?>" class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white text-gray-900 text-center rounded-lg font-medium transition-colors duration-200">
+                            <?php _e('Réinitialiser', 'parisii-optique-plugin'); ?>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </aside>
+        <?php
+    }
+    
+    /**
+     * Render brand card
+     */
+    public static function render_brand_card($brand) {
+        $categories = Parisii_Optique_Brand::get_categories($brand->id);
+        ?>
+        <article class="card flex flex-col h-full hover:shadow-lg dark:hover:shadow-lg dark:shadow-md transition-shadow duration-300">
+            <section class="content flex flex-col gap-4 h-full">
+                <?php if (!empty($brand->logo)) : ?>
+                    <figure class="flex items-center justify-center rounded-lg">
+                        <img src="<?php echo esc_url($brand->logo); ?>" alt="<?php echo esc_attr($brand->name); ?>" class="w-full object-contain">
+                        <figcaption class="sr-only"><?php echo esc_html($brand->name); ?></figcaption>
+                    </figure>
+                <?php endif; ?>
+                <div class="flex-grow">
+                    <h3 class="text-xl font-heading font-semibold text-gray-900 dark:text-white">
+                        <?php echo esc_html($brand->name); ?>
+                    </h3>
+                </div>
+                <?php if (!empty($categories)) : ?>
+                    <section class="flex flex-wrap gap-2 mt-auto">
+                        <?php foreach ($categories as $category) : ?>
+                            <span class="inline-block px-3 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full border border-gray-200 dark:border-gray-700">
+                                <?php echo esc_html($category->name); ?>
+                            </span>
+                        <?php endforeach; ?>
+                    </section>
+                <?php endif; ?>
+            </section>
+        </article>
+        <?php
+    }
+    
+    /**
+     * Render brands grid
+     */
+    public static function render_brands_grid() {
+        $brands = self::get_filtered_brands();
+        
+        if (empty($brands)) {
+            echo '<div class="card text-center py-12 bg-gray-50 dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700">';
+            echo '<div class="text-gray-400 dark:text-gray-500 mb-4">';
+            echo '<svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
+            echo '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>';
+            echo '</svg>';
+            echo '</div>';
+            echo '<p class="text-gray-500 dark:text-gray-400 text-lg">' . __('Aucune marque trouvée.', 'parisii-optique-plugin') . '</p>';
+            echo '<p class="text-gray-400 dark:text-gray-500 text-sm mt-2">' . __('Essayez de modifier vos critères de recherche.', 'parisii-optique-plugin') . '</p>';
+            echo '</div>';
+            return;
+        }
+        
+        echo '<div class="card-layout md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">';
+        foreach ($brands as $brand) {
+            self::render_brand_card($brand);
+        }
+        echo '</div>';
+    }
+}
+

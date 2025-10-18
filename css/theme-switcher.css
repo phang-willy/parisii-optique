@@ -1,0 +1,224 @@
+/**
+ * Theme Switcher Component CSS
+ *
+ * @package Parisii_Optique
+ */
+
+/* Theme Switcher Component */
+.theme-switcher-component {
+  @apply inline-block;
+}
+
+/* Button Style */
+.theme-switcher-btn {
+  @apply relative overflow-hidden transition-all duration-300;
+}
+
+/* Icon visibility - Reset all icons to hidden by default */
+.theme-switcher-btn .sun-icon,
+.theme-switcher-btn .moon-icon,
+.theme-switcher-btn .system-icon {
+  @apply hidden;
+}
+
+/* Show sun icon only in light mode when theme is light */
+.light .theme-switcher-btn .sun-icon {
+  @apply block !important;
+}
+
+/* Show moon icon only in dark mode when theme is dark */
+.dark .theme-switcher-btn .moon-icon {
+  @apply block !important;
+}
+
+/* System mode icon visibility - handled by JavaScript */
+
+.theme-switcher-btn:hover {
+  @apply scale-105;
+}
+
+.theme-switcher-btn:active {
+  @apply scale-95;
+}
+
+.theme-switcher-btn .theme-icon {
+  @apply transition-transform duration-300;
+}
+
+.theme-switcher-btn:hover .theme-icon {
+  @apply rotate-12;
+}
+
+/* Toggle Style */
+.theme-switcher-toggle {
+  @apply sr-only;
+}
+
+.theme-switcher-toggle + label {
+  @apply cursor-pointer;
+}
+
+.theme-switcher-toggle:checked + label .theme-switcher-toggle-handle {
+  @apply translate-x-7;
+}
+
+.theme-switcher-toggle:checked + label > div > div:first-child {
+  @apply bg-main-500;
+}
+
+.theme-switcher-toggle-handle {
+  @apply transition-transform duration-300 ease-in-out;
+}
+
+.theme-switcher-toggle-handle svg {
+  @apply transition-colors duration-300;
+}
+
+.theme-switcher-toggle:checked + label .theme-switcher-toggle-handle svg {
+  @apply text-main-500;
+}
+
+/* Dropdown Style */
+.theme-dropdown-menu {
+  @apply opacity-0 transform scale-95 transition-all duration-200 ease-out;
+}
+
+.theme-dropdown-menu.show {
+  @apply opacity-100 transform scale-100;
+}
+
+.theme-dropdown-item {
+  @apply transition-colors duration-150;
+}
+
+.theme-dropdown-item:hover {
+  @apply bg-gray-100 dark:bg-gray-700;
+}
+
+.theme-dropdown-item.active {
+  @apply bg-main-50 dark:bg-main-900 text-main-600 dark:text-main-400;
+}
+
+.theme-dropdown-item.active svg {
+  @apply text-main-600 dark:text-main-400;
+}
+
+/* Select Style */
+.theme-switcher-select {
+  @apply transition-all duration-300;
+}
+
+.theme-switcher-select:focus {
+  @apply ring-2 ring-main-500 ring-opacity-50;
+}
+
+.theme-switcher-select option {
+  @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-white;
+}
+
+/* Size Variations */
+.theme-switcher-component .w-8 {
+  @apply w-8 h-8;
+}
+
+.theme-switcher-component .w-10 {
+  @apply w-10 h-10;
+}
+
+.theme-switcher-component .w-12 {
+  @apply w-12 h-12;
+}
+
+/* Animation for theme transitions */
+.theme-switcher-component * {
+  @apply transition-colors duration-300;
+}
+
+/* Focus styles for accessibility */
+.theme-switcher-btn:focus-visible,
+.theme-switcher-toggle + label:focus-visible,
+.theme-switcher-select:focus-visible {
+  @apply outline-2 outline-main-500 outline-offset-2;
+}
+
+/* Loading state */
+.theme-switcher-component.loading {
+  @apply opacity-50 pointer-events-none;
+}
+
+.theme-switcher-component.loading .theme-icon {
+  @apply animate-spin;
+}
+
+/* Dark mode specific styles */
+.dark .theme-switcher-btn {
+  @apply bg-gray-800 text-gray-400 hover:text-white;
+}
+
+.dark .theme-switcher-toggle + label > div > div:first-child {
+  @apply bg-gray-700;
+}
+
+.dark .theme-switcher-toggle:checked + label > div > div:first-child {
+  @apply bg-main-600;
+}
+
+.dark .theme-switcher-select {
+  @apply bg-gray-800 border-gray-600 text-white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .theme-switcher-component .w-8 {
+    @apply w-6 h-6;
+  }
+  
+  .theme-switcher-component .w-10 {
+    @apply w-8 h-8;
+  }
+  
+  .theme-switcher-component .w-12 {
+    @apply w-10 h-10;
+  }
+}
+
+/* Print styles */
+@media print {
+  .theme-switcher-component {
+    @apply hidden;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .theme-switcher-btn {
+    @apply border-2 border-current;
+  }
+  
+  .theme-switcher-toggle + label > div > div:first-child {
+    @apply border-2 border-current;
+  }
+  
+  .theme-switcher-select {
+    @apply border-2 border-current;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .theme-switcher-component * {
+    @apply transition-none;
+  }
+  
+  .theme-switcher-btn:hover .theme-icon {
+    @apply rotate-0;
+  }
+  
+  .theme-switcher-btn:hover {
+    @apply scale-100;
+  }
+  
+  .theme-switcher-btn:active {
+    @apply scale-100;
+  }
+}

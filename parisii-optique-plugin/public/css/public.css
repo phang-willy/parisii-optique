@@ -1,0 +1,15 @@
+/**
+ * Public styles for Parisii Optique Plugin
+ * Utilise principalement Tailwind CSS
+ *
+ * @package Parisii_Optique_Plugin
+ */
+
+/* 
+ * Note: Ce plugin utilise Tailwind CSS du thème.
+ * Les classes .card et .card-layout sont définies dans src/input.css du thème.
+ * 
+ * Ce fichier ne contient que les styles spécifiques impossibles à faire avec Tailwind seul.
+ * Actuellement : aucun style nécessaire, tout est géré via classes Tailwind !
+ */
+

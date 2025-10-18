@@ -1,0 +1,311 @@
+/**
+ * Menu Categories CSS
+ *
+ * @package Parisii_Optique
+ */
+
+/* Product Categories in Menu */
+.menu-item-product-category {
+  @apply relative;
+}
+
+.menu-item-product-category .menu-item-icon {
+  @apply inline-block w-4 h-4 mr-2 text-gray-600 dark:text-gray-400 transition-colors duration-200;
+}
+
+.menu-item-product-category:hover .menu-item-icon {
+  @apply text-main-500;
+}
+
+.menu-item-product-category.current-menu-item .menu-item-icon {
+  @apply text-main-500;
+}
+
+.menu-item-product-category .menu-item-count {
+  @apply text-sm text-gray-500 dark:text-gray-400 ml-1;
+}
+
+.menu-item-product-category .menu-item-description {
+  @apply text-xs text-gray-500 dark:text-gray-400 mt-1;
+}
+
+/* Product Categories Shortcode */
+.product-categories-shortcode {
+  @apply w-full;
+}
+
+.product-categories-list {
+  @apply space-y-2;
+}
+
+.product-categories-list .product-category-item {
+  @apply block;
+}
+
+.product-categories-list .product-category-link {
+  @apply flex items-center p-3 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200;
+}
+
+.product-categories-list .category-icon {
+  @apply w-5 h-5 mr-3 text-main-500;
+}
+
+.product-categories-list .category-name {
+  @apply font-medium text-gray-900 dark:text-white;
+}
+
+.product-categories-list .category-count {
+  @apply text-sm text-gray-500 dark:text-gray-400 ml-auto;
+}
+
+.product-categories-list .category-description {
+  @apply text-sm text-gray-600 dark:text-gray-400 mt-2 ml-8;
+}
+
+/* Grid Layout */
+.product-categories-grid {
+  @apply gap-4;
+}
+
+.product-categories-grid .product-category-item {
+  @apply p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-main-500 transition-colors duration-200;
+}
+
+.product-categories-grid .product-category-link {
+  @apply flex flex-col items-center text-center;
+}
+
+.product-categories-grid .category-icon {
+  @apply w-8 h-8 mb-2 text-main-500;
+}
+
+.product-categories-grid .category-name {
+  @apply font-semibold text-gray-900 dark:text-white mb-1;
+}
+
+.product-categories-grid .category-count {
+  @apply text-sm text-gray-500 dark:text-gray-400;
+}
+
+.product-categories-grid .category-description {
+  @apply text-sm text-gray-600 dark:text-gray-400 mt-2;
+}
+
+/* Dropdown Layout */
+.product-categories-dropdown {
+  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-main-500 focus:border-main-500;
+}
+
+/* Tabs Layout */
+.product-categories-tabs {
+  @apply w-full;
+}
+
+.product-categories-tabs .tabs-nav {
+  @apply flex border-b border-gray-200 dark:border-gray-700;
+}
+
+.product-categories-tabs .tab-nav-item {
+  @apply flex-1;
+}
+
+.product-categories-tabs .tab-nav-link {
+  @apply flex items-center justify-center p-4 text-center border-b-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600 transition-colors duration-200;
+}
+
+.product-categories-tabs .tab-nav-item.active .tab-nav-link {
+  @apply border-main-500 text-main-500;
+}
+
+.product-categories-tabs .tabs-content {
+  @apply p-6;
+}
+
+.product-categories-tabs .tab-content {
+  @apply hidden;
+}
+
+.product-categories-tabs .tab-content.active {
+  @apply block;
+}
+
+.product-categories-tabs .tab-content h3 {
+  @apply text-xl font-semibold text-gray-900 dark:text-white mb-2;
+}
+
+.product-categories-tabs .tab-content p {
+  @apply text-gray-600 dark:text-gray-400 mb-4;
+}
+
+/* Menu Styles */
+.product-categories-menu {
+  @apply w-full;
+}
+
+.product-categories-menu .menu {
+  @apply flex space-x-4;
+}
+
+.product-categories-menu .menu-vertical {
+  @apply flex-col space-x-0 space-y-2;
+}
+
+.product-categories-menu .menu-item {
+  @apply relative;
+}
+
+.product-categories-menu .menu-link {
+  @apply flex items-center px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:text-main-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200;
+}
+
+.product-categories-menu .menu-icon {
+  @apply w-4 h-4 mr-2;
+}
+
+.product-categories-menu .menu-text {
+  @apply font-medium;
+}
+
+.product-categories-menu .menu-count {
+  @apply text-sm text-gray-500 dark:text-gray-400 ml-1;
+}
+
+.product-categories-menu .menu-dropdown {
+  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-main-500 focus:border-main-500;
+}
+
+/* Admin Styles */
+.menu-item-product-category {
+  @apply bg-blue-50 border-l-4 border-blue-500;
+}
+
+.menu-item-product-category .item-title {
+  @apply font-semibold text-blue-900;
+}
+
+.menu-item-product-category .item-type {
+  @apply text-blue-600 italic;
+}
+
+.menu-item-product-category .dashicons {
+  @apply text-blue-500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .product-categories-grid {
+    @apply grid-cols-1;
+  }
+  
+  .product-categories-menu .menu {
+    @apply flex-col space-x-0 space-y-2;
+  }
+  
+  .product-categories-tabs .tabs-nav {
+    @apply flex-col;
+  }
+  
+  .product-categories-tabs .tab-nav-item {
+    @apply flex-none;
+  }
+}
+
+@media (max-width: 640px) {
+  .product-categories-list .product-category-link {
+    @apply p-2;
+  }
+  
+  .product-categories-grid .product-category-item {
+    @apply p-3;
+  }
+  
+  .product-categories-tabs .tabs-content {
+    @apply p-4;
+  }
+}
+
+/* Dark Mode */
+.dark .product-categories-list .product-category-link {
+  @apply bg-gray-800 hover:bg-gray-700;
+}
+
+.dark .product-categories-grid .product-category-item {
+  @apply bg-gray-800 border-gray-700 hover:border-main-500;
+}
+
+.dark .product-categories-menu .menu-link {
+  @apply text-gray-300 hover:text-main-400 hover:bg-gray-800;
+}
+
+/* Hover Effects */
+.product-category-item:hover {
+  @apply transform scale-105;
+}
+
+.product-category-link:hover {
+  @apply text-main-500;
+}
+
+.menu-link:hover {
+  @apply text-main-500;
+}
+
+/* Focus Styles */
+.product-category-link:focus,
+.menu-link:focus,
+.product-categories-dropdown:focus,
+.menu-dropdown:focus {
+  @apply outline-2 outline-main-500 outline-offset-2;
+}
+
+/* Animation */
+.product-category-item {
+  @apply transition-all duration-200;
+}
+
+.menu-item {
+  @apply transition-all duration-200;
+}
+
+/* Loading States */
+.product-categories-shortcode.loading {
+  @apply opacity-50 pointer-events-none;
+}
+
+.product-categories-shortcode.loading::after {
+  content: '';
+  @apply absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center;
+}
+
+/* Print Styles */
+@media print {
+  .product-categories-menu,
+  .product-categories-shortcode {
+    @apply hidden;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .product-category-link,
+  .menu-link {
+    @apply border-2 border-current;
+  }
+  
+  .product-categories-dropdown,
+  .menu-dropdown {
+    @apply border-2 border-current;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .product-category-item,
+  .menu-item {
+    @apply transition-none;
+  }
+  
+  .product-category-item:hover {
+    @apply transform-none;
+  }
+}

@@ -1,0 +1,106 @@
+/* Editor styles for Parisii blocks */
+
+.parisii-carousel-block,
+.parisii-accordion-block,
+.parisii-image-text-section-block,
+.parisii-newsletter-section-block,
+.parisii-blank-section-block,
+.parisii-product-categories-block,
+.parisii-theme-switcher-block,
+.parisii-duplicate-block {
+    margin: 20px 0;
+}
+
+.carousel-settings,
+.accordion-settings,
+.section-settings,
+.newsletter-settings,
+.categories-settings,
+.theme-switcher-settings,
+.duplicate-settings {
+    background: #f0f0f0;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.carousel-settings h4,
+.accordion-settings h4,
+.section-settings h4,
+.newsletter-settings h4,
+.categories-settings h4,
+.theme-switcher-settings h4,
+.duplicate-settings h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.carousel-preview,
+.accordion-preview,
+.section-preview,
+.newsletter-preview,
+.categories-preview,
+.theme-switcher-preview,
+.duplicate-preview {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    min-height: 200px;
+    border-radius: 5px;
+}
+
+.parisii-carousel-item,
+.parisii-accordion-item {
+    margin-bottom: 10px;
+}
+
+.parisii-carousel-item .carousel-item-content {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f9f9f9;
+    min-height: 150px;
+}
+
+.parisii-accordion-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f9f9f9;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.accordion-item-title {
+    padding: 15px;
+    background: #e9e9e9;
+    border-bottom: 1px solid #ddd;
+    font-weight: bold;
+}
+
+.accordion-item-content {
+    padding: 15px;
+}
+
+.section-preview {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.section-preview > div {
+    flex: 1;
+    min-width: 200px;
+}
+
+.section-preview h5 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.section-preview label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 12px;
+}

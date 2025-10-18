@@ -1,0 +1,33 @@
+# Configuration .htaccess pour augmenter les limites d'upload
+# À ajouter dans le fichier .htaccess principal du site WordPress
+
+# Augmenter les limites PHP
+php_value upload_max_filesize 10M
+php_value post_max_size 10M
+php_value max_execution_time 300
+php_value memory_limit 256M
+php_value max_input_time 300
+
+# Configuration pour les gros fichiers
+php_value max_file_uploads 20
+
+# Désactiver les limites de taille pour les uploads
+LimitRequestBody 10485760
+
+# Configuration pour les images
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|svg)$">
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+</FilesMatch>
+
+# Configuration pour les documents
+<FilesMatch "\.(pdf|doc|docx|xls|xlsx|ppt|pptx)$">
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+</FilesMatch>
+
+# Configuration pour les archives
+<FilesMatch "\.(zip|rar|7z|tar|gz)$">
+    php_value upload_max_filesize 10M
+    php_value post_max_size 10M
+</FilesMatch>

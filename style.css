@@ -1,0 +1,23 @@
+/*
+Theme Name: Parisii Optique
+Theme URI: https://parisii-optique.fr
+Author: Parisii Optique
+Author URI: https://parisii-optique.fr
+Description: Thème WordPress personnalisé pour Parisii Optique avec WooCommerce
+Version: 1.0.0
+Requires at least: 6.0
+Tested up to: 6.4
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: parisii-optique
+Tags: e-commerce, woocommerce, custom-menu, custom-colors, dark-mode
+
+This theme, like WordPress, is licensed under the GPL.
+Use it to make something cool, have fun, and share what you've learned.
+*/
+
+/* 
+ * Le CSS principal est compilé dans dist/style.css via Tailwind CSS
+ * Ce fichier style.css contient uniquement les en-têtes requis par WordPress
+ */
