@@ -20,7 +20,7 @@
     "postcss": "^8.4.32"
   },
   "devDependencies": {
-    "@wordpress/scripts": "^27.0.0",
+    "@wordpress/scripts": "^30.26.0",
     "autoprefixer": "^10.4.16"
   }
 }

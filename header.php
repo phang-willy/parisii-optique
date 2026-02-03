@@ -19,4 +19,4 @@
 
 <?php get_template_part('templates-parts/header/navbar'); ?>
 
-<main id="main" class="site-content grow pt-[65px]">
+<main id="main" class="site-content grow">
