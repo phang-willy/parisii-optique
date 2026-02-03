@@ -6,7 +6,7 @@
  */
 ?>
 
-<header class="navbar left-0 z-50 border-b border-gray-200 overflow-visible top-0 fixed will-change-transform w-full bg-white/80 dark:bg-black/80 dark:border-gray-800 backdrop-blur-md">
+<header id="header" class="navbar left-0 z-50 border-b border-gray-200 overflow-visible top-0 fixed will-change-transform w-full bg-white/80 dark:bg-black/80 dark:border-gray-800 backdrop-blur-md">
     <a class="skip-link screen-reader-text" href="#main"><?php esc_html_e('Aller au contenu', 'parisii-optique'); ?></a>
     <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div class="flex items-center justify-between">
