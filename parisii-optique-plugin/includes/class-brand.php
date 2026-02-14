@@ -142,63 +142,11 @@ class Parisii_Optique_Brand {
     public static function delete($id) {
         global $wpdb;
         
-        // Delete brand categories associations first
-        $wpdb->delete(
-            $wpdb->prefix . 'po_brand_categories',
-            array('id_brand' => $id),
-            array('%d')
-        );
-        
-        // Delete brand
         return $wpdb->delete(
             $wpdb->prefix . 'po_brand',
             array('id' => $id),
             array('%d')
         );
-    }
-    
-    /**
-     * Get brand categories
-     */
-    public static function get_categories($brand_id) {
-        global $wpdb;
-        
-        $query = $wpdb->prepare(
-            "SELECT bc.* FROM {$wpdb->prefix}po_brand_category bc
-            INNER JOIN {$wpdb->prefix}po_brand_categories bcs ON bc.id = bcs.id_brand_category
-            WHERE bcs.id_brand = %d
-            ORDER BY bc.name ASC",
-            $brand_id
-        );
-        
-        return $wpdb->get_results($query);
-    }
-    
-    /**
-     * Set brand categories
-     */
-    public static function set_categories($brand_id, $category_ids) {
-        global $wpdb;
-        $table = $wpdb->prefix . 'po_brand_categories';
-        
-        // Delete existing associations
-        $wpdb->delete($table, array('id_brand' => $brand_id), array('%d'));
-        
-        // Insert new associations
-        if (!empty($category_ids)) {
-            foreach ($category_ids as $category_id) {
-                $wpdb->insert(
-                    $table,
-                    array(
-                        'id_brand' => $brand_id,
-                        'id_brand_category' => $category_id,
-                    ),
-                    array('%d', '%d')
-                );
-            }
-        }
-        
-        return true;
     }
     
     /**
@@ -222,40 +170,6 @@ class Parisii_Optique_Brand {
         $where_clause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
         
         return $wpdb->get_var("SELECT COUNT(*) FROM $table $where_clause");
-    }
-    
-    /**
-     * Get brands by category
-     */
-    public static function get_by_category($category_id, $args = array()) {
-        global $wpdb;
-        
-        $defaults = array(
-            'orderby' => 'name',
-            'order' => 'ASC',
-            'visible_only' => true,
-        );
-        
-        $args = wp_parse_args($args, $defaults);
-        
-        $where = array();
-        $where[] = $wpdb->prepare('bcs.id_brand_category = %d', $category_id);
-        
-        if ($args['visible_only']) {
-            $where[] = 'b.visible = 1';
-        }
-        
-        $where_clause = 'WHERE ' . implode(' AND ', $where);
-        
-        $orderby = esc_sql($args['orderby']);
-        $order = strtoupper($args['order']) === 'DESC' ? 'DESC' : 'ASC';
-        
-        $query = "SELECT DISTINCT b.* FROM {$wpdb->prefix}po_brand b
-            INNER JOIN {$wpdb->prefix}po_brand_categories bcs ON b.id = bcs.id_brand
-            $where_clause
-            ORDER BY b.$orderby $order";
-        
-        return $wpdb->get_results($query);
     }
 }
 
