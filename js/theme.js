@@ -14,29 +14,33 @@
         initSmoothScroll();
         initAnimations();
         initDesktopMenu();
-        adjustNavbarForAdminBar();
+        adjustNavbar();
     });
 
     // Window resize
     $(window).on('resize', function() {
-        adjustNavbarForAdminBar();
+        adjustNavbar();
     });
 
     /**
      * Adjust navbar position and main padding for WordPress admin bar
      */
-    function adjustNavbarForAdminBar() {
+    function adjustNavbar() {
         const $adminBar = $('#wpadminbar');
         const $header = $('header#header');
         const $main = $('main#main');
 
-        if (!$adminBar.length) return;
+        const headerHeight = $header.outerHeight() || 0 ;
+
+        if (!$adminBar.length) {
+            $main.css('padding-top', (headerHeight) + 'px');
+            return
+        };
 
         // Récupérer la position de l'admin bar (distance par rapport au haut de la page)
         $adminBar.offset() ? $adminBar.offset().top : 0;
 
         const adminBarHeight = $adminBar.outerHeight() || 0;
-        const headerHeight = $header.outerHeight() || 0 ;
         
         if (adminBarHeight > 0) {
             $adminBar.css('position', 'fixed');
