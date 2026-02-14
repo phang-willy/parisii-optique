@@ -109,9 +109,6 @@ class Parisii_Optique_Brand_List {
                         <th scope="col" class="manage-column">
                             <?php _e('Logo', 'parisii-optique-plugin'); ?>
                         </th>
-                        <th scope="col" class="manage-column">
-                            <?php _e('Catégories', 'parisii-optique-plugin'); ?>
-                        </th>
                         <th scope="col" class="manage-column sortable <?php echo $orderby === 'visible' ? strtolower($order) : ''; ?>">
                             <a href="<?php echo add_query_arg(array('orderby' => 'visible', 'order' => $next_order)); ?>">
                                 <span><?php _e('Visible', 'parisii-optique-plugin'); ?></span>
@@ -123,13 +120,11 @@ class Parisii_Optique_Brand_List {
                 <tbody>
                     <?php if (empty($brands)) : ?>
                         <tr>
-                            <td colspan="5" class="no-items"><?php _e('Aucune marque trouvée.', 'parisii-optique-plugin'); ?></td>
+                            <td colspan="4" class="no-items"><?php _e('Aucune marque trouvée.', 'parisii-optique-plugin'); ?></td>
                         </tr>
                     <?php else : ?>
                         <?php foreach ($brands as $brand) : ?>
                             <?php
-                            $categories = Parisii_Optique_Brand::get_categories($brand->id);
-                            $category_names = array_map(function($cat) { return $cat->name; }, $categories);
                             $edit_url = add_query_arg(array('tab' => 'edit', 'id' => $brand->id), admin_url('admin.php?page=parisii-optique-brands'));
                             $delete_url = wp_nonce_url(add_query_arg(array('tab' => 'delete', 'id' => $brand->id)), 'parisii_optique_delete_' . $brand->id);
                             ?>
@@ -152,13 +147,10 @@ class Parisii_Optique_Brand_List {
                                 </td>
                                 <td data-colname="<?php esc_attr_e('Logo', 'parisii-optique-plugin'); ?>">
                                     <?php if (!empty($brand->logo)) : ?>
-                                        <img src="<?php echo esc_url($brand->logo); ?>" alt="<?php echo esc_attr($brand->name); ?>" style="max-width: 50px; max-height: 50px;">
+                                        <img src="<?php echo esc_url($brand->logo); ?>" alt="<?php echo esc_attr($brand->name); ?> " style="width: 55px; height: 35px; object-fit: contain;">
                                     <?php else : ?>
                                         <span class="dashicons dashicons-format-image" style="font-size: 50px; color: #ddd;"></span>
                                     <?php endif; ?>
-                                </td>
-                                <td data-colname="<?php esc_attr_e('Catégories', 'parisii-optique-plugin'); ?>">
-                                    <?php echo esc_html(implode(', ', $category_names)); ?>
                                 </td>
                                 <td data-colname="<?php esc_attr_e('Visible', 'parisii-optique-plugin'); ?>">
                                     <?php if ($brand->visible) : ?>

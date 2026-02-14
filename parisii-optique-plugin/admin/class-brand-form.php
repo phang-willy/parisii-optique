@@ -28,13 +28,10 @@ class Parisii_Optique_Brand_Form {
             'visible' => isset($_POST['brand_visible']) ? 1 : 0,
         );
         
-        $category_ids = isset($_POST['brand_categories']) ? array_map('absint', $_POST['brand_categories']) : array();
-        
         if ($brand_id) {
             // Update existing brand
             $result = Parisii_Optique_Brand::update($brand_id, $data);
             if ($result !== false) {
-                Parisii_Optique_Brand::set_categories($brand_id, $category_ids);
                 echo '<div class="notice notice-success is-dismissible"><p>' . __('Marque mise à jour avec succès.', 'parisii-optique-plugin') . '</p></div>';
             } else {
                 echo '<div class="notice notice-error is-dismissible"><p>' . __('Erreur lors de la mise à jour de la marque.', 'parisii-optique-plugin') . '</p></div>';
@@ -43,7 +40,6 @@ class Parisii_Optique_Brand_Form {
             // Create new brand
             $new_id = Parisii_Optique_Brand::create($data);
             if ($new_id) {
-                Parisii_Optique_Brand::set_categories($new_id, $category_ids);
                 echo '<div class="notice notice-success is-dismissible"><p>' . __('Marque créée avec succès.', 'parisii-optique-plugin') . ' <a href="' . add_query_arg(array('tab' => 'edit', 'id' => $new_id), admin_url('admin.php?page=parisii-optique-brands')) . '">' . __('Modifier', 'parisii-optique-plugin') . '</a></p></div>';
                 $brand_id = $new_id;
             } else {
@@ -107,7 +103,6 @@ class Parisii_Optique_Brand_Form {
         
         // Get brand data if editing
         $brand = null;
-        $selected_categories = array();
         
         if ($brand_id) {
             $brand = Parisii_Optique_Brand::get_by_id($brand_id);
@@ -115,13 +110,7 @@ class Parisii_Optique_Brand_Form {
                 echo '<div class="notice notice-error"><p>' . __('Marque introuvable.', 'parisii-optique-plugin') . '</p></div>';
                 return;
             }
-            
-            $categories = Parisii_Optique_Brand::get_categories($brand_id);
-            $selected_categories = array_map(function($cat) { return $cat->id; }, $categories);
         }
-        
-        // Get all categories
-        $all_categories = Parisii_Optique_Brand_Category::get_all();
         
         $name = $brand ? $brand->name : '';
         $logo = $brand ? $brand->logo : '';
@@ -157,33 +146,6 @@ class Parisii_Optique_Brand_Form {
                                     <img src="<?php echo esc_url($logo); ?>" alt="" style="max-width: 150px; max-height: 150px; margin-top: 10px;">
                                 </p>
                             <?php endif; ?>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <th scope="row">
-                            <label for="brand_categories_container"><?php _e('Catégories', 'parisii-optique-plugin'); ?></label>
-                        </th>
-                        <td>
-                            <div id="brand_categories_container" class="categorydiv">
-                                <div class="tabs-panel">
-                                    <ul class="categorychecklist form-no-clear">
-                                        <?php if (empty($all_categories)) : ?>
-                                            <li><?php _e('Aucune catégorie disponible.', 'parisii-optique-plugin'); ?> <a href="<?php echo admin_url('admin.php?page=parisii-optique-categories'); ?>"><?php _e('Créer une catégorie', 'parisii-optique-plugin'); ?></a></li>
-                                        <?php else : ?>
-                                            <?php foreach ($all_categories as $category) : ?>
-                                                <li>
-                                                    <label class="selectit" for="brand_category_<?php echo esc_attr($category->id); ?>">
-                                                        <input type="checkbox" id="brand_category_<?php echo esc_attr($category->id); ?>" name="brand_categories[]" value="<?php echo esc_attr($category->id); ?>" <?php checked(in_array($category->id, $selected_categories)); ?>>
-                                                        <?php echo esc_html($category->name); ?>
-                                                    </label>
-                                                </li>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </ul>
-                                </div>
-                            </div>
-                            <p class="description"><?php _e('Sélectionnez les catégories auxquelles appartient cette marque', 'parisii-optique-plugin'); ?></p>
                         </td>
                     </tr>
                     

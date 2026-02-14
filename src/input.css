@@ -43,6 +43,8 @@
   --font-family-body: 'Inter', sans-serif;
 
   --spacing-3.75: 0.9375rem;
+
+  --aspect-ratio-220-125: 220 / 125;
 }
 
 :root {
@@ -416,4 +418,8 @@ button{
   .reverse-mobile {
     flex-wrap : wrap-reverse !important;
   }
+}
+
+.dark .parisii-optique-brand-card:hover {
+  box-shadow: 0 10px 25px -5px rgba(255, 255, 255, 0.12), 0 8px 10px -6px rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
