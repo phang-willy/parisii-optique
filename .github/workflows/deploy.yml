@@ -20,4 +20,4 @@ jobs:
           rsync -az --delete \
           --exclude ".git/" --exclude ".github/" \
           -e "ssh -p ${{ secrets.SSH_PORT }}" \
-          ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/domains/${{ secrets.DOMAIN }}/public_html/
+          ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/domains/${{ secrets.DOMAIN }}/public_html//wp-content/themes/parisii-optique/
