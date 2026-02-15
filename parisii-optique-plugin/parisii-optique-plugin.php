@@ -55,11 +55,9 @@ add_action('plugins_loaded', 'parisii_optique_plugin_load_textdomain');
  */
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'includes/class-database.php';
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'includes/class-brand.php';
-require_once PARISII_OPTIQUE_PLUGIN_PATH . 'includes/class-brand-category.php';
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'admin/class-admin-menu.php';
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'admin/class-brand-list.php';
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'admin/class-brand-form.php';
-require_once PARISII_OPTIQUE_PLUGIN_PATH . 'admin/class-category-manager.php';
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'public/class-template-loader.php';
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'public/class-brand-display.php';
 
@@ -90,6 +88,7 @@ function parisii_optique_plugin_admin_enqueue_scripts($hook) {
     }
     
     wp_enqueue_style('parisii-optique-admin', PARISII_OPTIQUE_PLUGIN_URL . 'admin/css/admin.css', array(), PARISII_OPTIQUE_PLUGIN_VERSION);
+    wp_enqueue_media();
     wp_enqueue_script('parisii-optique-admin', PARISII_OPTIQUE_PLUGIN_URL . 'admin/js/admin.js', array('jquery'), PARISII_OPTIQUE_PLUGIN_VERSION, true);
     
     // WordPress color picker

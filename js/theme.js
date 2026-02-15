@@ -14,34 +14,38 @@
         initSmoothScroll();
         initAnimations();
         initDesktopMenu();
-        adjustNavbarForAdminBar();
+        adjustNavbar();
     });
 
     // Window resize
     $(window).on('resize', function() {
-        adjustNavbarForAdminBar();
+        adjustNavbar();
     });
 
     /**
      * Adjust navbar position and main padding for WordPress admin bar
      */
-    function adjustNavbarForAdminBar() {
+    function adjustNavbar() {
         const $adminBar = $('#wpadminbar');
-        const $navbar = $('header.navbar');
+        const $header = $('header#header');
         const $main = $('main#main');
+
+        const headerHeight = $header.outerHeight() || 0 ;
+
+        if (!$adminBar.length) {
+            $main.css('padding-top', (headerHeight) + 'px');
+            return
+        };
+
+        // Récupérer la position de l'admin bar (distance par rapport au haut de la page)
+        $adminBar.offset() ? $adminBar.offset().top : 0;
+
+        const adminBarHeight = $adminBar.outerHeight() || 0;
         
-        if ($adminBar.length > 0) {
-            // Get admin bar height
-            const adminBarHeight = $adminBar.outerHeight() || 0;
-            
-            if (adminBarHeight > 0) {
-                // Adjust navbar top position
-                $navbar.css('top', adminBarHeight + 'px');
-                
-                // Adjust main padding-top (65px base + admin bar height)
-                const basePadding = 65;
-                $main.css('padding-top', (basePadding + adminBarHeight) + 'px');
-            }
+        if (adminBarHeight > 0) {
+            $adminBar.css('position', 'fixed');
+            $header.css('top', adminBarHeight + 'px');
+            $main.css('padding-top', (headerHeight + adminBarHeight) + 'px');
         }
     }
 

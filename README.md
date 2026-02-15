@@ -72,7 +72,7 @@ parisii-optique/
 1. **Télécharger le thème** dans `/wp-content/themes/parisii-optique/`
 2. **Installer les dépendances** :
    ```bash
-   npm install
+   npm install --legacy-peer-deps
    ```
 3. **Compiler le CSS** (Tailwind CSS v4) :
    ```bash

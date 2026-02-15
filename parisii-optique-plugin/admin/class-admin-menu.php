@@ -102,7 +102,6 @@ class Parisii_Optique_Admin_Menu {
             'add' => __('Ajouter', 'parisii-optique-plugin'),
             'edit' => __('Modifier', 'parisii-optique-plugin'),
             'delete' => __('Supprimer', 'parisii-optique-plugin'),
-            'categories' => __('Catégories', 'parisii-optique-plugin'),
         );
         
         // Handle edit tab - check if we have an ID
@@ -161,9 +160,6 @@ class Parisii_Optique_Admin_Menu {
                     case 'delete':
                         $this->render_delete_tab();
                         break;
-                    case 'categories':
-                        $this->render_categories_tab();
-                        break;
                     default:
                         $this->render_list_tab();
                         break;
@@ -214,14 +210,6 @@ class Parisii_Optique_Admin_Menu {
         } else {
             echo '<div class="notice notice-error"><p>' . __('ID de marque manquant.', 'parisii-optique-plugin') . '</p></div>';
         }
-    }
-    
-    /**
-     * Render categories tab
-     */
-    private function render_categories_tab() {
-        $category_manager = new Parisii_Optique_Category_Manager();
-        $category_manager->render();
     }
     
     /**

@@ -23,44 +23,40 @@ jQuery(document).ready(function($) {
         }
     });
     
-    // Media uploader for brand logo
-    if (typeof wp !== 'undefined' && wp.media) {
-        $('.brand-logo-upload').on('click', function(e) {
-            e.preventDefault();
-            
-            var button = $(this);
-            var input = button.siblings('.brand-logo-url');
-            var preview = button.siblings('.brand-logo-preview');
-            
-            var frame = wp.media({
-                title: 'Sélectionner un logo',
-                button: {
-                    text: 'Utiliser ce logo'
-                },
-                multiple: false
-            });
-            
-            frame.on('select', function() {
-                var attachment = frame.state().get('selection').first().toJSON();
-                input.val(attachment.url);
-                preview.html('<img src="' + attachment.url + '" style="max-width: 150px; max-height: 150px;">');
-            });
-            
-            frame.open();
+    // Media uploader for brand logo (bouton "Télécharger une image")
+    $(document).on('click', '.parisii-optique-upload-image', function(e) {
+        e.preventDefault();
+        
+        var button = $(this);
+        var cell = button.closest('td');
+        var input = cell.find('#brand_logo');
+        var preview = cell.find('.parisii-optique-logo-preview');
+        
+        if (typeof wp === 'undefined' || !wp.media) {
+            return;
+        }
+        
+        var frame = wp.media({
+            title: 'Sélectionner un logo',
+            button: {
+                text: 'Utiliser cette image'
+            },
+            library: { type: 'image' },
+            multiple: false
         });
         
-        // Remove logo
-        $('.brand-logo-remove').on('click', function(e) {
-            e.preventDefault();
-            
-            var button = $(this);
-            var input = button.siblings('.brand-logo-url');
-            var preview = button.siblings('.brand-logo-preview');
-            
-            input.val('');
-            preview.html('');
+        frame.on('select', function() {
+            var attachment = frame.state().get('selection').first().toJSON();
+            input.val(attachment.url);
+            if (preview.length) {
+                preview.html('<img src="' + attachment.url + '" alt="" style="max-width: 150px; max-height: 150px; margin-top: 10px;">').show();
+            } else {
+                button.after('<p class="parisii-optique-logo-preview"><img src="' + attachment.url + '" alt="" style="max-width: 150px; max-height: 150px; margin-top: 10px;"></p>');
+            }
         });
-    }
+        
+        frame.open();
+    });
     
     // Confirm delete actions
     $('.delete-action').on('click', function(e) {
