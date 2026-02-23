@@ -22,14 +22,6 @@ jobs:
           echo "Checking $SITE_URL..."
           curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Server unreachable or returned error"; exit 1)
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies and build
-        run: npm install --legacy-peer-deps && npm run build
-
       - name: Deploy theme to OVH via SFTP
         env:
           REMOTE_PATH: /home/${{ secrets.OVH_FTP_USER }}/www/wp-content/themes/parisii-optique
