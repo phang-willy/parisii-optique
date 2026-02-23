@@ -478,6 +478,7 @@ if (class_exists('WooCommerce')) {
 }
 
 require_once get_template_directory() . '/inc/theme-switcher.php';
+require_once get_template_directory() . '/inc/deploy-purge.php';
 
 // Include plugin activation class
 require_once get_template_directory() . '/inc/class-tgm-plugin-activation.php';

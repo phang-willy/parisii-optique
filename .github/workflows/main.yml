@@ -1,0 +1,93 @@
+name: "PRODUCTION - Deploy WordPress Theme"
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy-production:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify production server is operational
+        run: |
+          SITE_URL="https://${{ secrets.OVH_DOMAIN }}"
+          echo "Checking $SITE_URL..."
+          curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Server unreachable or returned error"; exit 1)
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies and build
+        run: npm install --legacy-peer-deps && npm run build
+
+      - name: Deploy theme to OVH via SFTP
+        env:
+          REMOTE_PATH: /home/${{ secrets.OVH_FTP_USER }}/www/wp-content/themes/parisii-optique
+        run: |
+          lftp -c "
+            set sftp:auto-confirm yes;
+            set ssl:verify-certificate no;
+            open -u ${{ secrets.OVH_FTP_USER }},${{ secrets.OVH_FTP_PASSWORD }} sftp://${{ secrets.OVH_FTP_HOST }}:${{ secrets.OVH_FTP_PORT }};
+            mirror -R -v \
+              -X .git \
+              -X node_modules \
+              -X .github \
+              -X .gitignore \
+              -X .cursorrules \
+              -X 'infos_ignore.md' \
+              -X .env \
+              ./ $REMOTE_PATH/;
+            quit
+          "
+
+      - name: Verify theme exists (retry deploy if missing)
+        env:
+          REMOTE_PATH: /home/${{ secrets.OVH_FTP_USER }}/www/wp-content/themes/parisii-optique
+        run: |
+          deploy_ovh() {
+            lftp -c "
+              set sftp:auto-confirm yes;
+              set ssl:verify-certificate no;
+              open -u ${{ secrets.OVH_FTP_USER }},${{ secrets.OVH_FTP_PASSWORD }} sftp://${{ secrets.OVH_FTP_HOST }}:${{ secrets.OVH_FTP_PORT }};
+              mirror -R -v -X .git -X node_modules -X .github -X .gitignore -X .cursorrules -X 'infos_ignore.md' -X .env ./ $REMOTE_PATH/;
+              quit
+            "
+          }
+          verify_theme() {
+            OUTPUT=$(lftp -c "
+              set sftp:auto-confirm yes;
+              set ssl:verify-certificate no;
+              open -u ${{ secrets.OVH_FTP_USER }},${{ secrets.OVH_FTP_PASSWORD }} sftp://${{ secrets.OVH_FTP_HOST }}:${{ secrets.OVH_FTP_PORT }};
+              cls -1 $REMOTE_PATH/;
+              quit
+            " 2>&1)
+            echo "$OUTPUT" | grep -qw "style.css" && echo "$OUTPUT" | grep -qw "functions.php"
+          }
+          if ! verify_theme; then
+            echo "Theme files missing, retrying deploy..."
+            deploy_ovh
+            verify_theme || (echo "Theme verification failed after retry"; exit 1)
+          fi
+          echo "Theme OK: style.css and functions.php found"
+
+      - name: Purge cache
+        if: vars.OVH_PURGE_ENABLED == 'true'
+        run: |
+          curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 "${{ secrets.OVH_CACHE_PURGE_URL }}" | grep -q "200" || echo "Cache purge returned non-200 (continuing)"
+
+      - name: Verify production site is still operational
+        run: |
+          SITE_URL="https://${{ secrets.OVH_DOMAIN }}"
+          echo "Post-deploy check: $SITE_URL..."
+          curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Site unreachable after deployment"; exit 1)
