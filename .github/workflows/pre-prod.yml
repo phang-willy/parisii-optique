@@ -32,7 +32,7 @@ jobs:
       - name: Deploy theme to Hostinger
         run: |
           scp -r -i ~/.ssh/deploy_key \
-            -P ${{ vars.secrets.HOSTINGER_SSH_PORT }} \
+            -P ${{ secrets.HOSTINGER_SSH_PORT }} \
             -o StrictHostKeyChecking=no \
             ./ ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }}:/home/${{ secrets.HOSTINGER_SSH_USER }}/domains/${{ secrets.HOSTINGER_DOMAIN }}/public_html/wp-content/themes/parisii-optique/
 
@@ -40,12 +40,12 @@ jobs:
         run: |
           THEME_PATH="/home/${{ secrets.HOSTINGER_SSH_USER }}/domains/${{ secrets.HOSTINGER_DOMAIN }}/public_html/wp-content/themes/parisii-optique"
           verify_theme() {
-            ssh -i ~/.ssh/deploy_key -p ${{ vars.secrets.HOSTINGER_SSH_PORT }} ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }} \
+            ssh -i ~/.ssh/deploy_key -p ${{ secrets.HOSTINGER_SSH_PORT }} ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }} \
               "test -f $THEME_PATH/style.css && test -f $THEME_PATH/functions.php"
           }
           if ! verify_theme; then
             echo "Theme files missing, retrying deploy..."
-            scp -r -i ~/.ssh/deploy_key -P ${{ vars.secrets.HOSTINGER_SSH_PORT }} -o StrictHostKeyChecking=no \
+            scp -r -i ~/.ssh/deploy_key -P ${{ secrets.HOSTINGER_SSH_PORT }} -o StrictHostKeyChecking=no \
               ./ ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }}:$THEME_PATH/
             verify_theme || (echo "Theme verification failed after retry"; exit 1)
           fi
