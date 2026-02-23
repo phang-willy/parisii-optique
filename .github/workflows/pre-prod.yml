@@ -29,12 +29,22 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.HOSTINGER_SSH_PORT }} "${{ secrets.HOSTINGER_SSH_HOST }}" >> ~/.ssh/known_hosts
 
+      - name: Test SSH login
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -p ${{ secrets.HOSTINGER_SSH_PORT }} \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }} "whoami && pwd"
+
       - name: Deploy theme to Hostinger
         run: |
           scp -r -i ~/.ssh/deploy_key \
             -P ${{ secrets.HOSTINGER_SSH_PORT }} \
-            -o StrictHostKeyChecking=no \
-            ./ ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }}:/home/${{ secrets.HOSTINGER_SSH_USER }}/domains/${{ secrets.HOSTINGER_DOMAIN }}/public_html/wp-content/themes/parisii-optique/
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            ./ \
+            ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }}:/home/${{ secrets.HOSTINGER_SSH_USER }}/domains/${{ secrets.HOSTINGER_DOMAIN }}/public_html/wp-content/themes/parisii-optique/
 
       - name: Verify theme exists (retry deploy if missing)
         run: |
