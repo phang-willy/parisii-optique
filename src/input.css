@@ -132,6 +132,11 @@
     @apply rotate-90 transform;
   }
   
+  /* Force menu items on one line (e.g. "Santé Visuelle") */
+  .nav-desktop ul > li {
+    white-space: nowrap;
+  }
+
   .navbar nav{
     ul {
       @apply list-none m-0 p-0 flex items-center;
