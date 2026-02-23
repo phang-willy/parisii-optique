@@ -27,7 +27,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p ${{ secrets.secrets.HOSTINGER_SSH_PORT }} "${{ secrets.HOSTINGER_SSH_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -p ${{ secrets.HOSTINGER_SSH_PORT }} "${{ secrets.HOSTINGER_SSH_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Deploy theme to Hostinger
         run: |
