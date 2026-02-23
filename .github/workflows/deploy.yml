@@ -24,14 +24,14 @@ jobs:
       - name: Deploy theme to Hostinger
         run: |
           scp -r -i ~/.ssh/deploy_key \
-            -P ${{ vars.HOSTINGER_SSH_PORT }} \
+            -P ${{ secrets.HOSTINGER_SSH_PORT }} \
             -o StrictHostKeyChecking=no \
             ./ ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }}:/home/${{ secrets.HOSTINGER_SSH_USER }}/domains/${{ secrets.HOSTINGER_DOMAIN }}/public_html/wp-content/themes/parisii-optique/
 
       - name: Verify deployment
         run: |
           ssh -i ~/.ssh/deploy_key \
-            -p ${{ vars.HOSTINGER_SSH_PORT }} \
+            -p ${{ secrets.HOSTINGER_SSH_PORT }} \
             ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }} \
             "ls -la /home/${{ secrets.HOSTINGER_SSH_USER }}/domains/${{ secrets.HOSTINGER_DOMAIN }}/public_html/wp-content/themes/parisii-optique/"
 
