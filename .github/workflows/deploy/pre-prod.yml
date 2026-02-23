@@ -1,4 +1,4 @@
-name: "[PRE-PRODUCTION] Deploy WordPress Theme"
+name: "PRE-PRODUCTION - Deploy WordPress Theme"
 
 on:
   push:
