@@ -22,18 +22,6 @@ jobs:
           echo "Checking $SITE_URL..."
           curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Server unreachable or returned error"; exit 1)
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install dependencies (CI) and build
-        run: |
-          # npm ci requires package-lock.json committed
-          npm ci
-          npm run build
-
       - name: Install lftp
         run: |
           sudo apt-get update
@@ -43,7 +31,7 @@ jobs:
       # - OVH mutualized most often supports FTPS (explicit TLS) and NOT SFTP.
       # - If your OVH really supports SFTP, switch protocol to sftp:// and remove the FTP TLS settings.
 
-      - name: Deploy theme to OVH via FTPS (recommended for OVH mutualized)
+      - name: Deploy or update theme on OVH via FTPS
         env:
           REMOTE_PATH: /home/${{ secrets.OVH_FTP_USER }}/www/wp-content/themes/parisii-optique
         run: |
@@ -58,7 +46,7 @@ jobs:
 
             open -u ${{ secrets.OVH_FTP_USER }},${{ secrets.OVH_FTP_PASSWORD }} ftps://${{ secrets.OVH_FTP_HOST }}:${{ secrets.OVH_FTP_PORT }};
             mkdir -p $REMOTE_PATH;
-            mirror -R -v \
+            mirror -R -v --overwrite \
               -X .git \
               -X node_modules \
               -X .github \
@@ -86,11 +74,13 @@ jobs:
 
               open -u ${{ secrets.OVH_FTP_USER }},${{ secrets.OVH_FTP_PASSWORD }} ftps://${{ secrets.OVH_FTP_HOST }}:${{ secrets.OVH_FTP_PORT }};
               mkdir -p $REMOTE_PATH;
-              mirror -R -v \
+              mirror -R -v --overwrite \
                 -X .git \
                 -X node_modules \
                 -X .github \
                 -X .gitignore \
+                -X package-lock.json \
+                -X package.json \
                 -X .cursorrules \
                 -X 'infos_ignore.md' \
                 -X .env \
@@ -119,7 +109,10 @@ jobs:
           if ! verify_theme; then
             echo "Theme files missing, retrying deploy..."
             deploy_ovh
-            verify_theme || (echo "Theme verification failed after retry"; exit 1)
+            if ! verify_theme; then
+              echo "::error::DEPLOY FAILED — Theme not found on server. style.css and/or functions.php missing in $REMOTE_PATH"
+              exit 1
+            fi
           fi
 
           echo "Theme OK: style.css and functions.php found"
