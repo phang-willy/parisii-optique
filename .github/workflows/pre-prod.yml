@@ -4,11 +4,14 @@ on:
   push:
     branches:
       - pre-prod
+  pull_request:
+    branches:
+      - pre-prod
   workflow_dispatch:
 
 jobs:
   deploy-pre-prod:
-    if: github.ref == 'refs/heads/pre-prod'
+    if: github.ref == 'refs/heads/pre-prod' || (github.event_name == 'pull_request' && github.base_ref == 'pre-prod')
     runs-on: ubuntu-latest
     environment: pre-prod
 
@@ -23,6 +26,7 @@ jobs:
           curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Server unreachable or returned error"; exit 1)
 
       - name: Setup SSH
+        if: github.event_name == 'push'
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/deploy_key
@@ -30,6 +34,7 @@ jobs:
           ssh-keyscan -p ${{ secrets.HOSTINGER_SSH_PORT }} "${{ secrets.HOSTINGER_SSH_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Test SSH login
+        if: github.event_name == 'push'
         run: |
           ssh -i ~/.ssh/deploy_key \
             -p ${{ secrets.HOSTINGER_SSH_PORT }} \
@@ -38,6 +43,7 @@ jobs:
             ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }} "whoami && pwd"
 
       - name: Deploy or update theme on Hostinger (sync changed files only)
+        if: github.event_name == 'push'
         run: |
           THEME_PATH="/home/${{ secrets.HOSTINGER_SSH_USER }}/domains/${{ secrets.HOSTINGER_DOMAIN }}/public_html/wp-content/themes/parisii-optique"
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.HOSTINGER_SSH_PORT }} \
@@ -56,6 +62,7 @@ jobs:
             ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }}:$THEME_PATH/
 
       - name: Verify theme exists (retry deploy if missing)
+        if: github.event_name == 'push'
         run: |
           THEME_PATH="/home/${{ secrets.HOSTINGER_SSH_USER }}/domains/${{ secrets.HOSTINGER_DOMAIN }}/public_html/wp-content/themes/parisii-optique"
           verify_theme() {
@@ -78,16 +85,17 @@ jobs:
           echo "Theme OK: style.css and functions.php found"
 
       - name: Purge cache
-        if: vars.HOSTINGER_PURGE_ENABLED == 'true'
+        if: github.event_name == 'push' && vars.HOSTINGER_PURGE_ENABLED == 'true'
         run: |
           curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 "${{ secrets.HOSTINGER_CACHE_PURGE_URL }}" | grep -q "200" || echo "Cache purge returned non-200 (continuing)"
 
       - name: Verify pre-prod site is still operational
+        if: github.event_name == 'push'
         run: |
           SITE_URL="https://${{ secrets.HOSTINGER_DOMAIN }}"
           echo "Post-deploy check: $SITE_URL..."
           curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Site unreachable after deployment"; exit 1)
 
       - name: Cleanup SSH
-        if: always()
+        if: always() && github.event_name == 'push'
         run: rm -f ~/.ssh/deploy_key
