@@ -36,23 +36,25 @@ jobs:
           REMOTE_PATH: /home/${{ secrets.OVH_FTP_USER }}/www/wp-content/themes/parisii-optique
         run: |
           lftp -c "
-            set net:max-retries 2;
-            set net:timeout 20;
-            set net:reconnect-interval-base 5;
-      
-            # Explicit FTPS (FTPES): connect in plain FTP then upgrade with AUTH TLS
+            set net:max-retries 5;
+            set net:timeout 60;
+            set net:reconnect-interval-base 10;
+            set net:limit-rate 0;
+
             set ftp:ssl-allow yes;
             set ftp:ssl-force yes;
             set ftp:ssl-protect-data yes;
             set ssl:verify-certificate no;
-      
-            open -u ${{ secrets.OVH_FTP_USER }},${{ secrets.OVH_FTP_PASSWORD }} ftp://${{ secrets.OVH_FTP_HOST }}:${{ secrets.OVH_FTP_PORT }};
+
+            open -u ${{ secrets.OVH_FTP_USER }},${{ secrets.OVH_FTP_PASSWORD }} ftps://${{ secrets.OVH_FTP_HOST }}:${{ secrets.OVH_FTP_PORT }};
             mkdir -p $REMOTE_PATH;
             mirror -R -v --overwrite \
               -X .git \
               -X node_modules \
               -X .github \
               -X .gitignore \
+              -X package-lock.json \
+              -X package.json \
               -X .cursorrules \
               -X 'infos_ignore.md' \
               -X .env \
@@ -66,9 +68,10 @@ jobs:
         run: |
           deploy_ovh() {
             lftp -c "
-              set net:max-retries 2;
-              set net:timeout 20;
-              set net:reconnect-interval-base 5;
+              set net:max-retries 5;
+              set net:timeout 60;
+              set net:reconnect-interval-base 10;
+              set net:limit-rate 0;
 
               set ftp:ssl-force true;
               set ftp:ssl-protect-data true;
@@ -93,8 +96,8 @@ jobs:
 
           verify_theme() {
             OUTPUT=$(lftp -c "
-              set net:max-retries 1;
-              set net:timeout 20;
+              set net:max-retries 5;
+              set net:timeout 60;
 
               set ftp:ssl-force true;
               set ftp:ssl-protect-data true;
