@@ -4,11 +4,14 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   deploy-production:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'pull_request' && github.base_ref == 'main')
     runs-on: ubuntu-latest
     environment: production
 
@@ -23,6 +26,7 @@ jobs:
           curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Server unreachable or returned error"; exit 1)
 
       - name: Install lftp
+        if: github.event_name == 'push'
         run: |
           sudo apt-get update
           sudo apt-get install -y lftp
@@ -32,6 +36,7 @@ jobs:
       # - If your OVH really supports SFTP, switch protocol to sftp:// and remove the FTP TLS settings.
 
       - name: Deploy or update theme on OVH via FTPS
+        if: github.event_name == 'push'
         env:
           REMOTE_PATH: /home/${{ secrets.OVH_FTP_USER }}/www/wp-content/themes/parisii-optique
         run: |
@@ -63,6 +68,7 @@ jobs:
           "
 
       - name: Verify theme exists (retry deploy if missing)
+        if: github.event_name == 'push'
         env:
           REMOTE_PATH: /home/${{ secrets.OVH_FTP_USER }}/www/wp-content/themes/parisii-optique
         run: |
@@ -123,11 +129,12 @@ jobs:
           echo "Theme OK: style.css and functions.php found"
 
       - name: Purge cache
-        if: vars.OVH_PURGE_ENABLED == 'true'
+        if: github.event_name == 'push' && vars.OVH_PURGE_ENABLED == 'true'
         run: |
           curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 "${{ secrets.OVH_CACHE_PURGE_URL }}" | grep -q "200" || echo "Cache purge returned non-200 (continuing)"
 
       - name: Verify production site is still operational
+        if: github.event_name == 'push'
         run: |
           SITE_URL="https://${{ secrets.OVH_DOMAIN }}"
           echo "Post-deploy check: $SITE_URL..."
