@@ -60,14 +60,24 @@ require_once PARISII_OPTIQUE_PLUGIN_PATH . 'admin/class-brand-list.php';
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'admin/class-brand-form.php';
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'public/class-template-loader.php';
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'public/class-brand-display.php';
+require_once PARISII_OPTIQUE_PLUGIN_PATH . 'contact/class-contact-settings.php';
+require_once PARISII_OPTIQUE_PLUGIN_PATH . 'contact/class-contact-handler.php';
+require_once PARISII_OPTIQUE_PLUGIN_PATH . 'contact/class-contact-list.php';
+require_once PARISII_OPTIQUE_PLUGIN_PATH . 'contact/class-contact-view.php';
+require_once PARISII_OPTIQUE_PLUGIN_PATH . 'contact/class-contact-dashboard.php';
 
 /**
  * Initialize the plugin
  */
 function parisii_optique_plugin_init() {
+    // Ensure DB tables exist (e.g. after adding po_contact without reactivating the plugin)
+    Parisii_Optique_Database::maybe_create_tables();
+    
     // Initialize admin menu
     if (is_admin()) {
         new Parisii_Optique_Admin_Menu();
+        new Parisii_Optique_Contact_Settings();
+        new Parisii_Optique_Contact_Dashboard();
     }
     
     // Initialize template loader
@@ -75,8 +85,60 @@ function parisii_optique_plugin_init() {
     
     // Initialize brand display
     new Parisii_Optique_Brand_Display();
+    
+    // Contact form handler (AJAX)
+    new Parisii_Optique_Contact_Handler();
 }
 add_action('init', 'parisii_optique_plugin_init');
+
+/**
+ * Admin bar: afficher le nombre de contacts non lus
+ */
+function parisii_optique_admin_bar_contact_unread($wp_admin_bar) {
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+    global $wpdb;
+    $table = $wpdb->prefix . 'po_contact';
+    $count = (int) $wpdb->get_var("SELECT COUNT(*) FROM `$table` WHERE (read_flag = 0 OR read_flag IS NULL)");
+    $contact_url = admin_url('admin.php?page=parisii-optique-contact&tab=list');
+    $title = '<span class="ab-icon dashicons dashicons-email-alt" aria-hidden="true"></span><span class="ab-label">' . esc_html__('Contact', 'parisii-optique-plugin') . '</span>';
+    if ($count > 0) {
+        $title .= ' <span class="parisii-contact-count">' . esc_html((string) $count) . '</span>';
+    }
+    $wp_admin_bar->add_node(array(
+        'id'    => 'parisii-optique-contact',
+        'title' => $title,
+        'href'  => $contact_url,
+        'meta'  => array('title' => __('Messages de contact', 'parisii-optique-plugin')),
+    ));
+}
+add_action('admin_bar_menu', 'parisii_optique_admin_bar_contact_unread', 100);
+
+/**
+ * Admin bar: styles pour l’icône et le badge Contact
+ */
+function parisii_optique_admin_bar_styles() {
+    if (!is_admin_bar_showing() || !current_user_can('manage_options')) {
+        return;
+    }
+    ?>
+<style id="parisii-optique-admin-bar">
+#wpadminbar #wp-admin-bar-parisii-optique-contact .ab-icon:before { top: 2px; }
+#wpadminbar #wp-admin-bar-parisii-optique-contact .parisii-contact-count {
+    background: #d63638;
+    color: #fff;
+    border-radius: 9999px;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 4px;
+}
+</style>
+    <?php
+}
+add_action('wp_head', 'parisii_optique_admin_bar_styles', 100);
+add_action('admin_head', 'parisii_optique_admin_bar_styles', 100);
 
 /**
  * Enqueue admin styles and scripts
@@ -87,7 +149,7 @@ function parisii_optique_plugin_admin_enqueue_scripts($hook) {
         return;
     }
     
-    wp_enqueue_style('parisii-optique-admin', PARISII_OPTIQUE_PLUGIN_URL . 'admin/css/admin.css', array(), PARISII_OPTIQUE_PLUGIN_VERSION);
+    wp_enqueue_style('parisii-optique-admin', PARISII_OPTIQUE_PLUGIN_URL . 'admin/css/admin.css', array('wp-admin'), PARISII_OPTIQUE_PLUGIN_VERSION);
     wp_enqueue_media();
     wp_enqueue_script('parisii-optique-admin', PARISII_OPTIQUE_PLUGIN_URL . 'admin/js/admin.js', array('jquery'), PARISII_OPTIQUE_PLUGIN_VERSION, true);
     

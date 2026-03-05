@@ -49,11 +49,8 @@ function parisii_optique_sync_plugin() {
     $needs_sync = parisii_optique_check_if_sync_needed($source, $destination);
     
     if ($needs_sync) {
-        // Synchroniser les fichiers
+        // Synchroniser les fichiers (sans afficher de notice : message uniquement au clic sur les boutons dédiés)
         parisii_optique_recursive_sync($source, $destination);
-        
-        // Afficher une notice de succès
-        add_action('admin_notices', 'parisii_optique_sync_success_notice');
     }
 }
 add_action('admin_init', 'parisii_optique_sync_plugin');

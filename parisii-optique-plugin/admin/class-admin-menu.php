@@ -23,7 +23,7 @@ class Parisii_Optique_Admin_Menu {
      */
     public function enqueue_admin_scripts($hook) {
         if (strpos($hook, 'parisii-optique') !== false) {
-            wp_enqueue_style('parisii-optique-admin', plugin_dir_url(__FILE__) . '../admin/css/admin.css', array(), '1.0.0');
+            wp_enqueue_style('parisii-optique-admin', plugin_dir_url(__FILE__) . '../admin/css/admin.css', array('wp-admin'), '1.0.0');
             wp_enqueue_script('parisii-optique-admin', plugin_dir_url(__FILE__) . '../admin/js/admin.js', array('jquery'), '1.0.0', true);
         }
     }
@@ -41,6 +41,16 @@ class Parisii_Optique_Admin_Menu {
             array($this, 'render_main_page'),
             'data:image/svg+xml;base64,' . base64_encode('<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>'),
             30
+        );
+        
+        // Submenu page "Contact" (first)
+        add_submenu_page(
+            'parisii-optique',
+            __('Contact', 'parisii-optique-plugin'),
+            __('Contact', 'parisii-optique-plugin'),
+            'manage_options',
+            'parisii-optique-contact',
+            array($this, 'render_contact_page')
         );
         
         // Submenu page "Marques"
@@ -77,6 +87,13 @@ class Parisii_Optique_Admin_Menu {
             <p><?php _e('Bienvenue dans le panneau de gestion Parisii Optique.', 'parisii-optique-plugin'); ?></p>
             
             <div class="parisii-dashboard-cards">
+                <div class="parisii-dashboard-card">
+                    <h2><?php _e('Contact', 'parisii-optique-plugin'); ?></h2>
+                    <p><?php _e('Consultez les messages du formulaire de contact et gérez les réglages.', 'parisii-optique-plugin'); ?></p>
+                    <a href="<?php echo admin_url('admin.php?page=parisii-optique-contact'); ?>" class="button button-primary">
+                        <?php _e('Accéder au contact', 'parisii-optique-plugin'); ?>
+                    </a>
+                </div>
                 <div class="parisii-dashboard-card">
                     <h2><?php _e('Marques', 'parisii-optique-plugin'); ?></h2>
                     <p><?php _e('Gérez vos marques de lunettes et accessoires.', 'parisii-optique-plugin'); ?></p>
@@ -210,6 +227,74 @@ class Parisii_Optique_Admin_Menu {
         } else {
             echo '<div class="notice notice-error"><p>' . __('ID de marque manquant.', 'parisii-optique-plugin') . '</p></div>';
         }
+    }
+    
+    /**
+     * Render contact page with tabs (list, view, settings)
+     */
+    public function render_contact_page() {
+        $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'list';
+        $view_id = isset($_GET['id']) ? absint($_GET['id']) : 0;
+        if ($current_tab === 'view' && $view_id) {
+            // View single message
+        } elseif ($current_tab === 'settings') {
+            // Settings
+        } else {
+            $current_tab = 'list';
+        }
+        
+        $tabs = array(
+            'list'     => __('Messages', 'parisii-optique-plugin'),
+            'settings' => __('Réglages', 'parisii-optique-plugin'),
+        );
+        ?>
+        <div class="wrap">
+            <div class="wp-header-end"></div>
+            <h1 class="wp-heading-inline"><?php esc_html_e('Contact', 'parisii-optique-plugin'); ?></h1>
+            <?php if ($current_tab !== 'view' || !$view_id) : ?>
+            <div class="alignright">
+                <form method="post" style="display: inline-block;">
+                    <?php wp_nonce_field('parisii_optique_update_plugin', 'parisii_optique_update_nonce'); ?>
+                    <input type="hidden" name="action" value="update_plugin">
+                    <button type="submit" class="button button-secondary" onclick="return confirm('<?php esc_attr_e('Êtes-vous sûr de vouloir mettre à jour le plugin depuis le thème ?', 'parisii-optique-plugin'); ?>');">
+                        <span class="dashicons dashicons-update" style="vertical-align: middle; margin-right: 5px;"></span>
+                        <?php esc_html_e('Mise à jour', 'parisii-optique-plugin'); ?>
+                    </button>
+                </form>
+            </div>
+            <?php endif; ?>
+            
+            <?php if ($current_tab === 'view' && $view_id) : ?>
+                <?php
+                $view = new Parisii_Optique_Contact_View();
+                $view->render($view_id);
+                ?>
+            <?php else : ?>
+                <nav class="nav-tab-wrapper wp-clearfix">
+                    <?php foreach ($tabs as $tab_key => $tab_label) : ?>
+                        <?php
+                        $tab_url = add_query_arg(array('page' => 'parisii-optique-contact', 'tab' => $tab_key), admin_url('admin.php'));
+                        $active_class = ($current_tab === $tab_key) ? ' nav-tab-active' : '';
+                        ?>
+                        <a href="<?php echo esc_url($tab_url); ?>" class="nav-tab<?php echo esc_attr($active_class); ?>">
+                            <?php echo esc_html($tab_label); ?>
+                        </a>
+                    <?php endforeach; ?>
+                </nav>
+                <div class="tab-content">
+                    <?php
+                    if ($current_tab === 'settings') {
+                        $settings = new Parisii_Optique_Contact_Settings();
+                        $settings->render_page();
+                    } else {
+                        $list = new Parisii_Optique_Contact_List();
+                        $list->render();
+                    }
+                    ?>
+                </div>
+            <?php endif; ?>
+        </div>
+        <?php
     }
     
     /**
