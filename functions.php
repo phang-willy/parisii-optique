@@ -289,6 +289,35 @@ function parisii_optique_scripts() {
 }
 add_action('wp_enqueue_scripts', 'parisii_optique_scripts');
 
+// Contact page form script (page slug: nous-contacter)
+function parisii_optique_contact_form_scripts() {
+    if (!is_page('nous-contacter')) {
+        return;
+    }
+    wp_enqueue_script(
+        'parisii-contact-form',
+        get_template_directory_uri() . '/js/contact-form.js',
+        array(),
+        '1.0.0',
+        true
+    );
+    wp_localize_script('parisii-contact-form', 'parisii_contact_ajax', array(
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce'    => wp_create_nonce('parisii_contact_nonce'),
+        'strings'  => array(
+            'required_nom'     => __('Le nom est obligatoire.', 'parisii-optique'),
+            'required_prenom'  => __('Le prénom est obligatoire.', 'parisii-optique'),
+            'required_email'   => __('L\'email est obligatoire.', 'parisii-optique'),
+            'invalid_email'    => __('Email invalide.', 'parisii-optique'),
+            'required_tel'     => __('Le téléphone est obligatoire.', 'parisii-optique'),
+            'required_sujet'   => __('Le sujet est obligatoire.', 'parisii-optique'),
+            'required_message' => __('Le message est obligatoire.', 'parisii-optique'),
+            'required_captcha' => __('Veuillez recopier le code.', 'parisii-optique'),
+        ),
+    ));
+}
+add_action('wp_enqueue_scripts', 'parisii_optique_contact_form_scripts');
+
 // Register widget areas
 function parisii_optique_widgets_init() {
     register_sidebar([
