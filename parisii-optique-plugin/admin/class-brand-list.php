@@ -109,6 +109,12 @@ class Parisii_Optique_Brand_List {
                         <th scope="col" class="manage-column">
                             <?php _e('Logo', 'parisii-optique-plugin'); ?>
                         </th>
+                        <th scope="col" class="manage-column sortable <?php echo $orderby === 'kids' ? strtolower($order) : ''; ?>">
+                            <a href="<?php echo add_query_arg(array('orderby' => 'kids', 'order' => $next_order)); ?>">
+                                <span><?php _e('Enfant', 'parisii-optique-plugin'); ?></span>
+                                <span class="sorting-indicator"></span>
+                            </a>
+                        </th>
                         <th scope="col" class="manage-column sortable <?php echo $orderby === 'visible' ? strtolower($order) : ''; ?>">
                             <a href="<?php echo add_query_arg(array('orderby' => 'visible', 'order' => $next_order)); ?>">
                                 <span><?php _e('Visible', 'parisii-optique-plugin'); ?></span>
@@ -120,7 +126,7 @@ class Parisii_Optique_Brand_List {
                 <tbody>
                     <?php if (empty($brands)) : ?>
                         <tr>
-                            <td colspan="4" class="no-items"><?php _e('Aucune marque trouvée.', 'parisii-optique-plugin'); ?></td>
+                            <td colspan="5" class="no-items"><?php _e('Aucune marque trouvée.', 'parisii-optique-plugin'); ?></td>
                         </tr>
                     <?php else : ?>
                         <?php foreach ($brands as $brand) : ?>
@@ -150,6 +156,11 @@ class Parisii_Optique_Brand_List {
                                         <img src="<?php echo esc_url($brand->logo); ?>" alt="<?php echo esc_attr($brand->name); ?> " style="width: 55px; height: 35px; object-fit: contain;">
                                     <?php else : ?>
                                         <span class="dashicons dashicons-format-image" style="font-size: 50px; color: #ddd;"></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td data-colname="<?php esc_attr_e('Enfant', 'parisii-optique-plugin'); ?>">
+                                    <?php if (!empty($brand->kids)) : ?>
+                                        <span class="dashicons dashicons-yes-alt" style="color: #46b450;"></span>
                                     <?php endif; ?>
                                 </td>
                                 <td data-colname="<?php esc_attr_e('Visible', 'parisii-optique-plugin'); ?>">

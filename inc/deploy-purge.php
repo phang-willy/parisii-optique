@@ -2,7 +2,7 @@
 /**
  * Deploy purge endpoint - clears cache after theme deployment
  *
- * Call: https://site.com/?parisii_deploy_purge=1&token=YOUR_SECRET_TOKEN
+ * Call (POST): https://site.com/ with parisii_deploy_purge=1&token=YOUR_SECRET_TOKEN
  * Define PARISII_DEPLOY_PURGE_TOKEN in wp-config.php
  *
  * @package Parisii_Optique
@@ -15,11 +15,16 @@ if (!defined('ABSPATH')) {
 add_action('init', 'parisii_optique_deploy_purge_handler', 1);
 
 function parisii_optique_deploy_purge_handler() {
-    if (!isset($_GET['parisii_deploy_purge']) || !isset($_GET['token']) || !defined('PARISII_DEPLOY_PURGE_TOKEN')) {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         return;
     }
 
-    if (!hash_equals(PARISII_DEPLOY_PURGE_TOKEN, $_GET['token'])) {
+    if (!isset($_POST['parisii_deploy_purge']) || !isset($_POST['token']) || !defined('PARISII_DEPLOY_PURGE_TOKEN')) {
+        return;
+    }
+
+    $token = sanitize_text_field(wp_unslash($_POST['token']));
+    if (!hash_equals(PARISII_DEPLOY_PURGE_TOKEN, $token)) {
         status_header(403);
         exit('Invalid token');
     }

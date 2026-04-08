@@ -272,11 +272,14 @@ add_action('after_setup_theme', 'parisii_optique_remove_default_patterns');
 
 // Enqueue scripts and styles
 function parisii_optique_scripts() {
+    $tailwind_css_path = get_template_directory() . '/dist/style.css';
+    $tailwind_css_version = file_exists($tailwind_css_path) ? (string) filemtime($tailwind_css_path) : wp_get_theme()->get('Version');
+
     // Enqueue Tailwind CSS
-    wp_enqueue_style('tailwind-css', get_template_directory_uri() . '/dist/style.css', [], '1.0.0');
+    wp_enqueue_style('tailwind-css', get_template_directory_uri() . '/dist/style.css', [], $tailwind_css_version);
     
     // Enqueue theme styles
-    wp_enqueue_style('parisii-optique-style', get_stylesheet_uri(), ['tailwind-css'], '1.0.0');
+    wp_enqueue_style('parisii-optique-style', get_stylesheet_uri(), ['tailwind-css'], wp_get_theme()->get('Version'));
     
     // Enqueue theme script
     wp_enqueue_script('parisii-optique-script', get_template_directory_uri() . '/js/theme.js', ['jquery'], '1.0.0', true);
@@ -374,65 +377,6 @@ add_action('widgets_init', 'parisii_optique_widgets_init');
 
 // Customizer settings
 function parisii_optique_customize_register($wp_customize) {
-    // Colors section
-    $wp_customize->add_section('parisii_colors', [
-        'title' => __('Couleurs du thème', 'parisii-optique'),
-        'priority' => 25,
-        'description' => __('Personnalisez les couleurs principales du thème', 'parisii-optique'),
-    ]);
-    
-    // Main color
-    $wp_customize->add_setting('color_main', [
-        'default' => '#558763',
-        'sanitize_callback' => 'sanitize_hex_color',
-        'transport' => 'refresh',
-    ]);
-    
-    $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize, 'color_main', [
-        'label' => __('Couleur principale', 'parisii-optique'),
-        'section' => 'parisii_colors',
-        'description' => __('Vert - Couleur principale du thème (#558763)', 'parisii-optique'),
-    ]));
-    
-    // Main hover color
-    $wp_customize->add_setting('color_main_hover', [
-        'default' => '#64BE7D',
-        'sanitize_callback' => 'sanitize_hex_color',
-        'transport' => 'refresh',
-    ]);
-    
-    $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize, 'color_main_hover', [
-        'label' => __('Couleur principale (hover)', 'parisii-optique'),
-        'section' => 'parisii_colors',
-        'description' => __('Vert clair au survol (#64BE7D)', 'parisii-optique'),
-    ]));
-    
-    // Secondary color
-    $wp_customize->add_setting('color_secondary', [
-        'default' => '#5C442F',
-        'sanitize_callback' => 'sanitize_hex_color',
-        'transport' => 'refresh',
-    ]);
-    
-    $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize, 'color_secondary', [
-        'label' => __('Couleur secondaire', 'parisii-optique'),
-        'section' => 'parisii_colors',
-        'description' => __('Marron - Couleur secondaire du thème (#5C442F)', 'parisii-optique'),
-    ]));
-    
-    // Secondary hover color
-    $wp_customize->add_setting('color_secondary_hover', [
-        'default' => '#9F7550',
-        'sanitize_callback' => 'sanitize_hex_color',
-        'transport' => 'refresh',
-    ]);
-    
-    $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize, 'color_secondary_hover', [
-        'label' => __('Couleur secondaire (hover)', 'parisii-optique'),
-        'section' => 'parisii_colors',
-        'description' => __('Marron clair au survol (#9F7550)', 'parisii-optique'),
-    ]));
-    
     // Theme switcher section
     $wp_customize->add_section('theme_switcher', [
         'title' => __('Thème', 'parisii-optique'),
@@ -456,39 +400,6 @@ function parisii_optique_customize_register($wp_customize) {
     ]);
 }
 add_action('customize_register', 'parisii_optique_customize_register');
-
-/**
- * Output custom colors CSS
- */
-function parisii_optique_custom_colors_css() {
-    $color_main = get_theme_mod('color_main', '#558763');
-    $color_main_hover = get_theme_mod('color_main_hover', '#64BE7D');
-    $color_secondary = get_theme_mod('color_secondary', '#5C442F');
-    $color_secondary_hover = get_theme_mod('color_secondary_hover', '#9F7550');
-    
-    ?>
-    <style type="text/css" id="parisii-custom-colors">
-        :root {
-            --color-main: <?php echo esc_html($color_main); ?> !important;
-            --color-main-hover: <?php echo esc_html($color_main_hover); ?> !important;
-            --color-secondary: <?php echo esc_html($color_secondary); ?> !important;
-            --color-secondary-hover: <?php echo esc_html($color_secondary_hover); ?> !important;
-        }
-        
-        [data-theme="dark"], .dark {
-            --color-main: <?php echo esc_html($color_main_hover); ?> !important;
-            --color-main-hover: <?php echo esc_html($color_main); ?> !important;
-            --color-secondary: <?php echo esc_html($color_secondary_hover); ?> !important;
-            --color-secondary-hover: <?php echo esc_html($color_secondary); ?> !important;
-        }
-        
-        /* Debug - Afficher les couleurs */
-        /* Main: <?php echo $color_main; ?>, Hover: <?php echo $color_main_hover; ?> */
-        /* Secondary: <?php echo $color_secondary; ?>, Hover: <?php echo $color_secondary_hover; ?> */
-    </style>
-    <?php
-}
-add_action('wp_head', 'parisii_optique_custom_colors_css', 100);
 
 // Add body classes for theme mode
 function parisii_optique_body_classes($classes) {

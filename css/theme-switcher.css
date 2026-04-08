@@ -109,7 +109,7 @@
 }
 
 .theme-switcher-select:focus {
-  @apply ring-2 ring-main-500 ring-opacity-50;
+  @apply ring-2 ring-main ring-opacity-50;
 }
 
 .theme-switcher-select option {

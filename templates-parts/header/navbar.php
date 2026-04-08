@@ -14,13 +14,13 @@
                 <?php if (has_custom_logo()) : ?>
                     <div class="w-16 lg:w-32">
                         <?php the_custom_logo(); ?>
-                        <span class="sr-only"><?= bloginfo('name'); ?> - <?= bloginfo('description'); ?></span>
+                        <span class="sr-only"><?php echo esc_html(get_bloginfo('name')); ?> - <?php echo esc_html(get_bloginfo('description')); ?></span>
                     </div>
                 <?php else : ?>
-                    <a href="<?php echo esc_url(home_url('/')); ?>" class="text-2xl font-heading font-bold text-main-500">
-                        <?= bloginfo('name'); ?>
+                    <a href="<?php echo esc_url(home_url('/')); ?>" class="text-2xl font-heading font-bold bg-secondary">
+                        <?php echo esc_html(get_bloginfo('name')); ?>
                     </a>
-                    <span class="sr-only"><?= bloginfo('name'); ?> - <?= bloginfo('description'); ?></span>
+                    <span class="sr-only"><?php echo esc_html(get_bloginfo('name')); ?> - <?php echo esc_html(get_bloginfo('description')); ?></span>
                 <?php endif; ?>
             </div>
             
@@ -38,7 +38,7 @@
             
             <div class="flex items-center flex-row gap-4">
                 <?php echo do_shortcode('[theme_switcher style="dropdown" size="medium" show_label="false"]'); ?>
-                <button id="mobile-menu-button" class="md:hidden p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" aria-label="<?php esc_attr_e('Ouvrir le menu', 'parisii-optique'); ?>">
+                <button id="mobile-menu-button" class="md:hidden cursor-pointer p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" aria-label="<?php esc_attr_e('Ouvrir le menu', 'parisii-optique'); ?>">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
@@ -53,7 +53,7 @@
         <div class="container flex flex-col h-full">
             <div class="flex items-center justify-between py-3 px-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 h-16">
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white"><?php _e('Menu', 'parisii-optique'); ?></h2>
-                <button id="mobile-menu-close" class="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" aria-label="<?php esc_attr_e('Fermer le menu', 'parisii-optique'); ?>">
+                <button id="mobile-menu-close" class="cursor-pointer p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" aria-label="<?php esc_attr_e('Fermer le menu', 'parisii-optique'); ?>">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>

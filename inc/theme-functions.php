@@ -61,11 +61,11 @@ class Parisii_Optique_Walker_Nav_Menu extends Walker_Nav_Menu {
         
         // Wrapper pour le contenu de l'item si a des enfants
         $is_active = ($is_current || $is_current_parent);
-        $active_wrapper = $is_active ? ' bg-main-400 text-white' : '';
+        $active_wrapper = $is_active ? ' bg-main text-white' : '';
         if ($has_children && $depth === 0) {
-            $output .= '<div class="flex items-center gap-8 menu-container pl-4 hover:bg-main-400 focus-visible:bg-main-600 hover:text-white transition-colors duration-200' . $active_wrapper . '">';
+            $output .= '<div class="flex items-center gap-8 menu-container pl-4 bg-main bg-secondary hover:text-white transition-colors duration-200' . $active_wrapper . '">';
         } elseif ($has_children && $depth > 0) {
-            $output .= '<div class="flex items-center justify-between w-full group hover:bg-main-400 focus-visible:bg-main-600 hover:text-white transition-colors duration-200' . $active_wrapper . '">';
+            $output .= '<div class="flex items-center justify-between w-full group bg-main bg-secondary hover:text-white transition-colors duration-200' . $active_wrapper . '">';
         }
         
         $attributes = ! empty($item->attr_title) ? ' title="'  . esc_attr($item->attr_title) .'"' : '';
@@ -82,17 +82,17 @@ class Parisii_Optique_Walker_Nav_Menu extends Walker_Nav_Menu {
                 $link_classes = 'nav-link block ' . $text_color . ' text-sm font-medium transition-colors duration-200';
             } else {
                 // Pour les items sans enfants niveau 0 : bg et hover complets
-                $active_link_class = $is_active ? 'bg-main-400 text-white' : 'text-gray-700 dark:text-gray-300';
-                $link_classes = 'nav-link block ' . $active_link_class . ' hover:bg-main-400 hover:text-white py-3.5 text-sm font-medium px-6 transition-colors duration-200';
+                $active_link_class = $is_active ? 'bg-main text-white' : 'text-gray-700 dark:text-gray-300';
+                $link_classes = 'nav-link block ' . $active_link_class . ' hover:bg-main hover:text-white py-3.5 text-sm font-medium px-6 transition-colors duration-200';
             }
         } else {
             // Même style pour tous les sous-niveaux (enfants et enfants d'enfants)
-            $active_link_class = $is_active ? 'bg-main-400 text-white' : 'text-gray-700 dark:text-gray-300';
+            $active_link_class = $is_active ? 'bg-main text-white' : 'text-gray-700 dark:text-gray-300';
             
             if ($has_children) {
-                $link_classes = 'nav-link flex-1 ' . $active_link_class . ' px-4 py-3 text-sm font-medium transition-colors duration-200 group-hover:bg-main-400 group-hover:text-white';
+                $link_classes = 'nav-link flex-1 ' . $active_link_class . ' px-4 py-3 text-sm font-medium transition-colors duration-200 group-hover:bg-main group-hover:text-white';
             } else {
-                $link_classes = 'nav-link block ' . $active_link_class . ' hover:bg-main-400 hover:text-white px-4 py-3 text-sm font-medium transition-colors duration-200';
+                $link_classes = 'nav-link block ' . $active_link_class . ' hover:bg-main hover:text-white px-4 py-3 text-sm font-medium transition-colors duration-200';
             }
         }
         
@@ -107,13 +107,13 @@ class Parisii_Optique_Walker_Nav_Menu extends Walker_Nav_Menu {
         // Ajouter bouton toggle ou chevron si l'item a des enfants
         if ($has_children && $depth === 0) {
             $toggle_class = ($is_current || $is_current_parent) ? 'text-white' : 'text-gray-700 dark:text-gray-300';
-            $item_output .= '<button type="button" class="desktop-submenu-toggle p-4 ' . $toggle_class . ' hover:bg-main-600 hover:text-white transition-colors duration-200" aria-expanded="false" aria-label="' . esc_attr__('Ouvrir le sous-menu', 'parisii-optique') . '">';
+            $item_output .= '<button type="button" class="desktop-submenu-toggle p-4 ' . $toggle_class . ' bg-secondary hover:text-white transition-colors duration-200" aria-expanded="false" aria-label="' . esc_attr__('Ouvrir le sous-menu', 'parisii-optique') . '">';
             $item_output .= '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down transition-transform duration-200"><path d="m6 9 6 6 6-6"/></svg>';
             $item_output .= '</button>';
         } elseif ($has_children && $depth > 0) {
             // Bouton chevron à droite pour les sous-sous-menus - même padding que les liens
             $toggle_class = ($is_current || $is_current_parent) ? 'text-white' : 'text-gray-700 dark:text-gray-300';
-            $item_output .= '<button type="button" class="desktop-submenu-toggle-nested px-4 py-3.75 ' . $toggle_class . ' hover:bg-main-600 group-hover:text-white transition-colors duration-200" aria-expanded="false" aria-label="' . esc_attr__('Ouvrir le sous-menu', 'parisii-optique') . '">';
+            $item_output .= '<button type="button" class="desktop-submenu-toggle-nested px-4 py-3.75 ' . $toggle_class . ' bg-secondary group-hover:text-white transition-colors duration-200" aria-expanded="false" aria-label="' . esc_attr__('Ouvrir le sous-menu', 'parisii-optique') . '">';
             $item_output .= '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right transition-transform duration-200"><path d="m9 18 6-6-6-6"/></svg>';
             $item_output .= '</button>';
         }
@@ -191,15 +191,15 @@ class Parisii_Optique_Walker_Nav_Menu_Mobile extends Walker_Nav_Menu {
         $has_children = in_array('menu-item-has-children', $classes);
         
         // Classes actives
-        $active_wrapper_class = ($is_current || $is_current_parent) ? 'bg-main-400 text-white' : '';
+        $active_wrapper_class = ($is_current || $is_current_parent) ? 'bg-main text-white' : '';
         
         // Wrapper pour le contenu de l'item
         if ($has_children) {
             if ($depth === 0) {
-                $output .= '<div class="flex items-center justify-between pl-4 hover:bg-main-400 ' . $active_wrapper_class . '">';
+                $output .= '<div class="flex items-center justify-between pl-4 bg-main ' . $active_wrapper_class . '">';
             } else {
                 // Même style pour tous les sous-niveaux - hover uniquement, pas de padding (sera sur le lien)
-                $output .= '<div class="flex items-center justify-between hover:bg-main-400 ' . $active_wrapper_class . '">';
+                $output .= '<div class="flex items-center justify-between bg-main ' . $active_wrapper_class . '">';
             }
         }
         
@@ -209,13 +209,13 @@ class Parisii_Optique_Walker_Nav_Menu_Mobile extends Walker_Nav_Menu {
         $attributes .= ! empty($item->url)        ? ' href="'   . esc_attr($item->url        ) .'"' : '';
         
         // Classes différentes selon la profondeur et si a des enfants
-        $active_link_class = ($is_current || $is_current_parent) ? 'bg-main-400 text-white' : 'text-gray-700 dark:text-gray-300';
+        $active_link_class = ($is_current || $is_current_parent) ? 'bg-main text-white' : 'text-gray-700 dark:text-gray-300';
         
         if ($depth === 0) {
             if ($has_children) {
-                $link_classes = 'nav-link flex-1 text-base font-medium ' . $active_link_class . ' hover:text-white hover:bg-main-400 focus:bg-main-600';
+                $link_classes = 'nav-link flex-1 text-base font-medium ' . $active_link_class . ' hover:text-white hover:bg-main focus:bg-secondary';
             } else {
-                $link_classes = 'nav-link block p-4 text-base font-medium ' . $active_link_class . ' hover:text-white hover:bg-main-400 focus:bg-main-600';
+                $link_classes = 'nav-link block p-4 text-base font-medium ' . $active_link_class . ' hover:text-white hover:bg-main focus:bg-secondary';
             }
         } else {
             // Même style pour tous les sous-niveaux (enfants et enfants d'enfants)
@@ -223,7 +223,7 @@ class Parisii_Optique_Walker_Nav_Menu_Mobile extends Walker_Nav_Menu {
             if ($has_children) {
                 $link_classes = 'nav-link flex-1 p-4 text-sm font-medium ' . $active_link_class . ' hover:text-white';
             } else {
-                $link_classes = 'nav-link block p-4 text-sm font-medium ' . $active_link_class . ' hover:bg-main-400 hover:text-white focus:bg-main-600';
+                $link_classes = 'nav-link block p-4 text-sm font-medium ' . $active_link_class . ' hover:bg-main hover:text-white focus:bg-secondary';
             }
         }
         
@@ -241,10 +241,10 @@ class Parisii_Optique_Walker_Nav_Menu_Mobile extends Walker_Nav_Menu {
             $toggle_class = ($is_current || $is_current_parent) ? 'text-white' : 'text-gray-700 dark:text-gray-300';
             
             if ($depth === 0) {
-                $item_output .= '<button type="button" class="submenu-toggle p-4 ' . $toggle_class . ' hover:text-white hover:bg-main-600 focus:bg-main-800 transition-all duration-200" aria-expanded="' . $aria_expanded . '" aria-label="' . esc_attr__('Ouvrir le sous-menu', 'parisii-optique') . '">';
+                $item_output .= '<button type="button" class="submenu-toggle p-4 ' . $toggle_class . ' hover:text-white bg-secondary bg-secondary transition-all duration-200" aria-expanded="' . $aria_expanded . '" aria-label="' . esc_attr__('Ouvrir le sous-menu', 'parisii-optique') . '">';
             } else {
                 // Même style pour tous les sous-niveaux
-                $item_output .= '<button type="button" class="submenu-toggle p-4 ' . $toggle_class . ' hover:text-white hover:bg-main-600 focus:bg-main-800 transition-all duration-200" aria-expanded="false" aria-label="' . esc_attr__('Ouvrir le sous-menu', 'parisii-optique') . '">';
+                $item_output .= '<button type="button" class="submenu-toggle p-4 ' . $toggle_class . ' hover:text-white bg-secondary bg-secondary transition-all duration-200" aria-expanded="false" aria-label="' . esc_attr__('Ouvrir le sous-menu', 'parisii-optique') . '">';
             }
             
             $item_output .= '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down transition-transform duration-200"><path d="m6 9 6 6 6-6"/></svg>';
