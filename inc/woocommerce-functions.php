@@ -79,7 +79,7 @@ add_action('woocommerce_before_shop_loop_item_title', 'parisii_optique_woocommer
  */
 function parisii_optique_woocommerce_shop_loop_item_title() {
     echo '<div class="p-6">';
-    echo '<h3 class="text-lg font-heading font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-main-600 dark:group-hover:text-main-400 transition-colors">';
+    echo '<h3 class="text-lg font-heading font-semibold text-gray-900 dark:text-white mb-2 bg-secondary bg-main transition-colors">';
     echo '<a href="' . get_permalink() . '">' . get_the_title() . '</a>';
     echo '</h3>';
 }
@@ -93,7 +93,7 @@ function parisii_optique_woocommerce_after_shop_loop_item_title() {
     global $product;
     
     if ($product->get_price_html()) {
-        echo '<div class="text-main-600 dark:text-main-400 font-semibold text-lg mb-4">';
+        echo '<div class="bg-secondary bg-main font-semibold text-lg mb-4">';
         echo $product->get_price_html();
         echo '</div>';
     }

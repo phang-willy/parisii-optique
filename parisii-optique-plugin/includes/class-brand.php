@@ -23,6 +23,7 @@ class Parisii_Optique_Brand {
             'orderby' => 'name',
             'order' => 'ASC',
             'visible_only' => false,
+            'kids' => null,
             'search' => '',
             'offset' => 0,
             'limit' => 999999,
@@ -35,6 +36,10 @@ class Parisii_Optique_Brand {
         if ($args['visible_only']) {
             $where[] = 'visible = 1';
         }
+
+        if ($args['kids'] !== null) {
+            $where[] = 'kids = ' . (absint($args['kids']) ? '1' : '0');
+        }
         
         if (!empty($args['search'])) {
             $search = esc_sql($wpdb->esc_like($args['search']));
@@ -43,7 +48,8 @@ class Parisii_Optique_Brand {
         
         $where_clause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
         
-        $orderby = esc_sql($args['orderby']);
+        $allowed_orderby = array('id', 'name', 'visible', 'kids');
+        $orderby = in_array($args['orderby'], $allowed_orderby, true) ? $args['orderby'] : 'name';
         $order = strtoupper($args['order']) === 'DESC' ? 'DESC' : 'ASC';
         $offset = absint($args['offset']);
         $limit = absint($args['limit']);
@@ -77,6 +83,7 @@ class Parisii_Optique_Brand {
             'name' => '',
             'logo' => '',
             'visible' => 1,
+            'kids' => 0,
         );
         
         $data = wp_parse_args($data, $defaults);
@@ -87,8 +94,9 @@ class Parisii_Optique_Brand {
                 'name' => sanitize_text_field($data['name']),
                 'logo' => esc_url_raw($data['logo']),
                 'visible' => absint($data['visible']),
+                'kids' => absint($data['kids']),
             ),
-            array('%s', '%s', '%d')
+            array('%s', '%s', '%d', '%d')
         );
         
         if ($result === false) {
@@ -120,6 +128,11 @@ class Parisii_Optique_Brand {
         
         if (isset($data['visible'])) {
             $update_data['visible'] = absint($data['visible']);
+            $format[] = '%d';
+        }
+
+        if (isset($data['kids'])) {
+            $update_data['kids'] = absint($data['kids']);
             $format[] = '%d';
         }
         

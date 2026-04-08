@@ -169,7 +169,7 @@ class Parisii_Popup_Manager {
                     $all_pages = get_pages();
                     foreach ($all_pages as $page) {
                         $checked = in_array($page->ID, $pages) ? 'checked' : '';
-                        echo '<label><input type="checkbox" name="popup_pages[]" value="' . $page->ID . '" ' . $checked . '> ' . $page->post_title . '</label><br>';
+                        echo '<label><input type="checkbox" name="popup_pages[]" value="' . esc_attr($page->ID) . '" ' . esc_attr($checked) . '> ' . esc_html($page->post_title) . '</label><br>';
                     }
                     ?>
                 </td>
@@ -182,7 +182,7 @@ class Parisii_Popup_Manager {
                     $blog_categories = get_categories();
                     foreach ($blog_categories as $category) {
                         $checked = in_array($category->term_id, $categories) ? 'checked' : '';
-                        echo '<label><input type="checkbox" name="popup_categories[]" value="' . $category->term_id . '" ' . $checked . '> ' . $category->name . '</label><br>';
+                        echo '<label><input type="checkbox" name="popup_categories[]" value="' . esc_attr($category->term_id) . '" ' . esc_attr($checked) . '> ' . esc_html($category->name) . '</label><br>';
                     }
                     ?>
                 </td>
@@ -196,10 +196,10 @@ class Parisii_Popup_Manager {
                         $woo_products = get_posts(['post_type' => 'product', 'numberposts' => -1]);
                         foreach ($woo_products as $product) {
                             $checked = in_array($product->ID, $products) ? 'checked' : '';
-                            echo '<label><input type="checkbox" name="popup_products[]" value="' . $product->ID . '" ' . $checked . '> ' . $product->post_title . '</label><br>';
+                            echo '<label><input type="checkbox" name="popup_products[]" value="' . esc_attr($product->ID) . '" ' . esc_attr($checked) . '> ' . esc_html($product->post_title) . '</label><br>';
                         }
                     } else {
-                        echo 'WooCommerce n\'est pas installé';
+                        echo esc_html__('WooCommerce n\'est pas installé', 'parisii-popup-manager');
                     }
                     ?>
                 </td>
@@ -298,7 +298,7 @@ class Parisii_Popup_Manager {
         
         foreach ($fields as $field) {
             if (isset($_POST[$field])) {
-                $value = $_POST[$field];
+                $value = wp_unslash($_POST[$field]);
                 if (is_array($value)) {
                     $value = array_map('sanitize_text_field', $value);
                 } else {
@@ -403,7 +403,7 @@ class Parisii_Popup_Manager {
         // Check page starts with
         $page_starts_with = get_post_meta($popup_id, '_popup_page_starts_with', true);
         if ($page_starts_with) {
-            $current_path = $_SERVER['REQUEST_URI'];
+            $current_path = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';
             if (strpos($current_path, $page_starts_with) !== 0) {
                 return false;
             }

@@ -93,7 +93,7 @@
 
 /* Dropdown Layout */
 .product-categories-dropdown {
-  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-main-500 focus:border-main-500;
+  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-main focus:border-main-500;
 }
 
 /* Tabs Layout */
@@ -171,7 +171,7 @@
 }
 
 .product-categories-menu .menu-dropdown {
-  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-main-500 focus:border-main-500;
+  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-main focus:border-main-500;
 }
 
 /* Admin Styles */
