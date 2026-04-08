@@ -20,6 +20,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          # Full history lets git-restore-mtime set realistic file mtimes → mirror --only-newer skips unchanged files.
+          fetch-depth: 0
+
+      - name: Restore git file mtimes (incremental SFTP)
+        if: github.event_name == 'push'
+        uses: chetan/git-restore-mtime-action@v2
 
       - name: Verify production server is operational
         run: |
@@ -110,7 +117,8 @@ jobs:
 
             open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
             cd ${THEME_PATH};
-            mirror -R --overwrite --parallel=8 \
+            mirror -R --only-newer --overwrite --parallel=8 \
+              --exclude-glob 'src/**' \
               -X .git \
               -X node_modules \
               -X .github \
@@ -120,6 +128,7 @@ jobs:
               -X .cursorrules \
               -X 'infos_ignore.md' \
               -X .env \
+              -X 'README.md' \
               ./ ${THEME_PATH}/;
             bye
           "
@@ -190,7 +199,8 @@ jobs:
               set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
               open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
               cd ${THEME_PATH};
-              mirror -R --overwrite --parallel=8 \
+              mirror -R --only-newer --overwrite --parallel=8 \
+                --exclude-glob 'src/**' \
                 -X .git \
                 -X node_modules \
                 -X .github \
@@ -200,6 +210,7 @@ jobs:
                 -X .cursorrules \
                 -X 'infos_ignore.md' \
                 -X .env \
+                -X 'README.md' \
                 ./ ${THEME_PATH}/;
               bye
             "
