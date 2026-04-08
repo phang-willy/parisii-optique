@@ -175,8 +175,12 @@ function parisii_optique_duplicate_admin_page() {
  */
 function parisii_optique_get_content_items() {
     check_ajax_referer('parisii_get_items', 'nonce');
-    
-    $content_type = sanitize_text_field($_POST['content_type']);
+
+    if (!current_user_can('edit_posts')) {
+        wp_die(esc_html__('Permissions insuffisantes', 'parisii-optique'));
+    }
+
+    $content_type = isset($_POST['content_type']) ? sanitize_text_field(wp_unslash($_POST['content_type'])) : '';
     $items_html = '';
     
     if (strpos($content_type, 'post_type_') === 0) {
@@ -192,7 +196,7 @@ function parisii_optique_get_content_items() {
                 '<label><input type="checkbox" name="items[]" value="%d"> %s (%s)</label><br>',
                 $post->ID,
                 esc_html($post->post_title),
-                $post->post_status
+                esc_html($post->post_status)
             );
         }
     } elseif (strpos($content_type, 'taxonomy_') === 0) {
@@ -214,7 +218,7 @@ function parisii_optique_get_content_items() {
     }
     
     if (empty($items_html)) {
-        $items_html = '<p>' . __('Aucun élément trouvé', 'parisii-optique') . '</p>';
+        $items_html = '<p>' . esc_html__('Aucun élément trouvé', 'parisii-optique') . '</p>';
     }
     
     wp_die($items_html);
@@ -225,7 +229,8 @@ add_action('wp_ajax_parisii_get_content_items', 'parisii_optique_get_content_ite
  * Handle bulk duplicate action
  */
 function parisii_optique_handle_bulk_duplicate() {
-    if (!wp_verify_nonce($_POST['bulk_duplicate_nonce'], 'parisii_bulk_duplicate')) {
+    $nonce = isset($_POST['bulk_duplicate_nonce']) ? sanitize_text_field(wp_unslash($_POST['bulk_duplicate_nonce'])) : '';
+    if (!wp_verify_nonce($nonce, 'parisii_bulk_duplicate')) {
         wp_die(__('Nonce invalide', 'parisii-optique'));
     }
     
@@ -233,13 +238,13 @@ function parisii_optique_handle_bulk_duplicate() {
         wp_die(__('Permissions insuffisantes', 'parisii-optique'));
     }
     
-    $content_type = sanitize_text_field($_POST['content_type']);
-    $items = array_map('intval', $_POST['items']);
+    $content_type = isset($_POST['content_type']) ? sanitize_text_field(wp_unslash($_POST['content_type'])) : '';
+    $items = isset($_POST['items']) && is_array($_POST['items']) ? array_map('intval', wp_unslash($_POST['items'])) : [];
     $duplicate_meta = isset($_POST['duplicate_meta']);
     $duplicate_taxonomies = isset($_POST['duplicate_taxonomies']);
     $duplicate_media = isset($_POST['duplicate_media']);
     $duplicate_comments = isset($_POST['duplicate_comments']);
-    $new_status = sanitize_text_field($_POST['new_status']);
+    $new_status = isset($_POST['new_status']) ? sanitize_text_field(wp_unslash($_POST['new_status'])) : 'draft';
     
     $duplicated_count = 0;
     $errors = [];
@@ -279,13 +284,15 @@ function parisii_optique_handle_bulk_duplicate() {
         }
     }
     
-    $message = sprintf(__('%d éléments dupliqués avec succès', 'parisii-optique'), $duplicated_count);
+    $message_lines = [sprintf(__('%d éléments dupliqués avec succès', 'parisii-optique'), $duplicated_count)];
     if (!empty($errors)) {
-        $message .= '<br>' . implode('<br>', $errors);
+        foreach ($errors as $error) {
+            $message_lines[] = $error;
+        }
     }
     
-    add_action('admin_notices', function() use ($message) {
-        echo '<div class="notice notice-success is-dismissible"><p>' . $message . '</p></div>';
+    add_action('admin_notices', function() use ($message_lines) {
+        echo '<div class="notice notice-success is-dismissible"><p>' . wp_kses_post(implode('<br>', array_map('esc_html', $message_lines))) . '</p></div>';
     });
 }
 

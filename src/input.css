@@ -15,51 +15,116 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-main-50: #faf8f4;
-  --color-main-100: #f3efe5;
-  --color-main-200: #e7ddc9;
-  --color-main-300: #d9c7a6;
-  --color-main-400: #c5b68d;
-  --color-main-500: #b19e73;
-  --color-main-600: #9a8561;
-  --color-main-700: #806d51;
-  --color-main-800: #6b5a45;
-  --color-main-900: #5a4c3c;
-  --color-main-950: #32291f;
-
-  --color-secondary-50: #faf8f6;
-  --color-secondary-100: #f4f0eb;
-  --color-secondary-200: #e7ddd0;
-  --color-secondary-300: #d6c5b0;
-  --color-secondary-400: #c4a88a;
-  --color-secondary-500: #9F7550;
-  --color-secondary-600: #8a6544;
-  --color-secondary-700: #735439;
-  --color-secondary-800: #5C442F;
-  --color-secondary-900: #4c3927;
-  --color-secondary-950: #281e14;
-
   --font-family-heading: 'Lexend', sans-serif;
   --font-family-body: 'Inter', sans-serif;
 
   --spacing-3.75: 0.9375rem;
 
   --aspect-ratio-220-125: 220 / 125;
+
+  /* Theme color aliases used by Tailwind utilities in templates */
+  --color-main-400: var(--color-main);
+  --color-main-500: var(--color-main);
+  --color-main-600: var(--color-main-hover);
+  --color-main-700: var(--color-main-hover);
+  --color-main-800: var(--color-main-focus);
+
+  --color-secondary-50: color-mix(in oklab, var(--color-secondary) 8%, white);
+  --color-secondary-700: var(--color-secondary-hover);
+  --color-secondary-800: var(--color-secondary);
+  --color-secondary-950: color-mix(in oklab, var(--color-secondary) 70%, black);
 }
 
 :root {
-  --color-main: #c5b68d;
-  --color-main-hover: #b19e73;
-  --color-secondary: #5C442F;
-  --color-secondary-hover: #9F7550;
+  --color-main: #6d513c;
+  --color-main-hover: #392b1f;
+  --color-main-focus: #392b1f;
+  --color-secondary: #ebdfcf;
+  --color-secondary-hover: #ebdfcf;
+  --color-secondary-focus: #9F7550;
 }
 
 [data-theme="dark"] {
-  --color-main: #d9c7a6;
-  --color-main-hover: #c5b68d;
+  --color-main: #6d513c;
+  --color-main-hover: #392b1f;
+  --color-main-focus: #392b1f;
   --color-secondary: #9F7550;
-  --color-secondary-hover: #5C442F;
+  --color-secondary-hover: #968368;
+  --color-secondary-focus: #968368;
 }
+
+@utility bg-main {
+  background-color: var(--color-main);
+}
+
+@utility bg-secondary {
+  background-color: var(--color-secondary);
+}
+
+@utility bg-main-400 {
+  background-color: var(--color-main);
+}
+
+@utility bg-main-500 {
+  background-color: var(--color-main);
+}
+
+@utility bg-main-600 {
+  background-color: var(--color-main-hover);
+}
+
+@utility bg-secondary-700 {
+  background-color: var(--color-secondary-hover);
+}
+
+@utility bg-secondary-800 {
+  background-color: var(--color-secondary);
+}
+
+@utility border-main-500 {
+  border-color: var(--color-main);
+}
+
+@utility text-main-500 {
+  color: var(--color-main);
+}
+
+@utility border-secondary-800 {
+  border-color: var(--color-secondary);
+}
+
+@utility text-secondary-800 {
+  color: var(--color-secondary);
+}
+
+@utility from-main-500 {
+  --tw-gradient-from: var(--color-main) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+@utility to-secondary-800 {
+  --tw-gradient-to: var(--color-secondary) var(--tw-gradient-to-position);
+}
+
+@utility outline-main-500 {
+  outline-color: var(--color-main);
+}
+
+@utility ring-main {
+  --tw-ring-color: var(--color-main);
+}
+
+@utility ring-main-500 {
+  --tw-ring-color: var(--color-main);
+}
+
+/* Fallback theme classes used directly in PHP templates
+.bg-main { background-color: var(--color-main); }
+.bg-secondary { background-color: var(--color-secondary); }
+.hover\:bg-main:hover { background-color: var(--color-main); }
+.group:hover .group-hover\:bg-main { background-color: var(--color-main); }
+.focus\:bg-secondary:focus { background-color: var(--color-secondary); } */
 
 @layer base {
   html {
@@ -177,28 +242,53 @@ a:hover, a:focus {
 }
 
 .btn:focus {
-  @apply ring-2 ring-main-500;
+  @apply ring-2;
+  --tw-ring-color: var(--color-main);
   --tw-ring-opacity: 0.5;
 }
 
 .btn-primary {
-  @apply bg-main-500 text-white hover:bg-main-600;
+  @apply text-white;
+  background-color: var(--color-main);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-main-hover);
 }
 
 .btn-secondary {
-  @apply bg-secondary-800 text-white hover:bg-secondary-700;
+  @apply text-white;
+  background-color: var(--color-secondary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-secondary-hover);
 }
 
 .btn-outline {
-  @apply border-2 border-main-500 text-main-500 bg-transparent hover:bg-main-500 hover:text-white;
+  @apply border-2 bg-transparent;
+  border-color: var(--color-main);
+  color: var(--color-main);
+}
+
+.btn-outline:hover {
+  background-color: var(--color-main);
+  color: white;
 }
 
 .btn-outline-secondary {
-  @apply border-2 border-secondary-800 text-secondary-800 bg-transparent hover:bg-secondary-800 hover:text-white;
+  @apply border-2 bg-transparent;
+  border-color: var(--color-secondary);
+  color: var(--color-secondary);
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--color-secondary);
+  color: white;
 }
 
 .text-gradient {
-  @apply bg-gradient-to-r from-main-500 to-secondary-800;
+  background-image: linear-gradient(to right, var(--color-main), var(--color-secondary));
   @apply bg-clip-text text-transparent;
 }
 
@@ -207,8 +297,13 @@ a:hover, a:focus {
 }
 
 .scroll-to-top {
-  @apply fixed bottom-8 right-8 z-40 bg-main-500 text-white p-3 rounded-full hover:bg-main-600 transition-all duration-200 opacity-0 invisible cursor-pointer border-none;
+  @apply fixed bottom-8 right-8 z-40 text-white p-3 rounded-full transition-all duration-200 opacity-0 invisible cursor-pointer border-none;
+  background-color: var(--color-main);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.scroll-to-top:hover {
+  background-color: var(--color-main-hover);
 }
 
 .scroll-to-top.visible {
@@ -260,7 +355,8 @@ a:hover, a:focus {
 .btn:focus-visible,
 a:focus-visible,
 button:focus-visible {
-  @apply outline-2 outline-main-500 outline-offset-2 focus-visible:outline-main-500;
+  @apply outline-2 outline-offset-2;
+  outline-color: var(--color-main);
 }
 
 @media print {
@@ -384,11 +480,21 @@ body {
 }
 
 .wp-block-button__link.has-main-background-color.has-background.wp-element-button {
-  @apply bg-main-500 text-white hover:bg-main-600;
+  @apply text-white;
+  background-color: var(--color-main);
+}
+
+.wp-block-button__link.has-main-background-color.has-background.wp-element-button:hover {
+  background-color: var(--color-main-hover);
 }
 
 .wp-block-button__link.has-secondary-background-color.has-background.wp-element-button {
-  @apply bg-secondary-800 text-white hover:bg-secondary-700;
+  @apply text-white;
+  background-color: var(--color-secondary);
+}
+
+.wp-block-button__link.has-secondary-background-color.has-background.wp-element-button:hover {
+  background-color: var(--color-secondary-hover);
 }
 
 .wp-block-button__link.has-gray-background-color.has-background.wp-element-button {

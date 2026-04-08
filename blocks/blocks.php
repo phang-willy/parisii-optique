@@ -144,7 +144,7 @@ function parisii_optique_render_product_categories_block($attributes) {
                                     if ($thumbnail_id) {
                                         echo wp_get_attachment_image($thumbnail_id, 'medium', false, ['class' => 'w-16 h-16 mx-auto rounded-full object-cover']);
                                     } else {
-                                        echo '<div class="w-16 h-16 mx-auto bg-main-500 rounded-full flex items-center justify-center text-white text-2xl">' . substr($category->name, 0, 1) . '</div>';
+                                        echo '<div class="w-16 h-16 mx-auto bg-secondary rounded-full flex items-center justify-center text-white text-2xl">' . substr($category->name, 0, 1) . '</div>';
                                     }
                                     ?>
                                 </div>

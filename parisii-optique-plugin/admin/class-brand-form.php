@@ -26,6 +26,7 @@ class Parisii_Optique_Brand_Form {
             'name' => sanitize_text_field($_POST['brand_name']),
             'logo' => esc_url_raw($_POST['brand_logo']),
             'visible' => isset($_POST['brand_visible']) ? 1 : 0,
+            'kids' => isset($_POST['brand_kids']) ? 1 : 0,
         );
         
         if ($brand_id) {
@@ -115,6 +116,7 @@ class Parisii_Optique_Brand_Form {
         $name = $brand ? $brand->name : '';
         $logo = $brand ? $brand->logo : '';
         $visible = $brand ? $brand->visible : 1;
+        $kids = $brand ? (isset($brand->kids) ? $brand->kids : 0) : 0;
         
         ?>
         <div class="wrap">
@@ -157,6 +159,17 @@ class Parisii_Optique_Brand_Form {
                             <label for="brand_visible">
                                 <input type="checkbox" id="brand_visible" name="brand_visible" value="1" <?php checked($visible, 1); ?>>
                                 <?php _e('Afficher cette marque sur le site', 'parisii-optique-plugin'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="brand_kids"><?php _e('Marque enfant', 'parisii-optique-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <label for="brand_kids">
+                                <input type="checkbox" id="brand_kids" name="brand_kids" value="1" <?php checked($kids, 1); ?>>
+                                <?php _e('Afficher cette marque dans la selection enfant', 'parisii-optique-plugin'); ?>
                             </label>
                         </td>
                     </tr>

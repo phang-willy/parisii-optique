@@ -18,12 +18,15 @@ class Parisii_Optique_Database {
      */
     public static function maybe_create_tables() {
         global $wpdb;
+        $table_brand = $wpdb->prefix . 'po_brand';
         $table_contact = $wpdb->prefix . 'po_contact';
-        $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_contact));
-        if ($exists !== $table_contact) {
+        $brand_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_brand));
+        $contact_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_contact));
+        if ($brand_exists !== $table_brand || $contact_exists !== $table_contact) {
             self::create_tables();
         } else {
             self::maybe_upgrade_contact_table();
+            self::maybe_upgrade_brand_table();
         }
     }
 
@@ -36,6 +39,24 @@ class Parisii_Optique_Database {
         $col = $wpdb->get_results($wpdb->prepare("SHOW COLUMNS FROM `$table` LIKE %s", 'read_flag'));
         if (empty($col)) {
             $wpdb->query("ALTER TABLE `$table` ADD COLUMN read_flag tinyint(1) DEFAULT 0 AFTER date_created, ADD COLUMN read_by bigint(20) UNSIGNED DEFAULT NULL AFTER read_flag, ADD COLUMN read_at datetime DEFAULT NULL AFTER read_by, ADD KEY read_flag (read_flag)");
+        }
+    }
+
+    /**
+     * Add kids column if missing (existing installs).
+     */
+    public static function maybe_upgrade_brand_table() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'po_brand';
+        $table_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+        if ($table_exists !== $table) {
+            return;
+        }
+
+        $col = $wpdb->get_results($wpdb->prepare("SHOW COLUMNS FROM `$table` LIKE %s", 'kids'));
+        if (empty($col)) {
+            $wpdb->query("ALTER TABLE `$table` ADD COLUMN kids tinyint(1) DEFAULT 0 AFTER visible");
+            $wpdb->query("UPDATE `$table` SET kids = 0 WHERE kids IS NULL");
         }
     }
     
@@ -54,6 +75,7 @@ class Parisii_Optique_Database {
             name varchar(255) NOT NULL,
             logo varchar(500) DEFAULT NULL,
             visible tinyint(1) DEFAULT 1,
+            kids tinyint(1) DEFAULT 0,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
