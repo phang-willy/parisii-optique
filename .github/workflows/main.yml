@@ -89,6 +89,16 @@ jobs:
           echo "Deploy SFTP sftp://${OVH_FTP_HOST}:${PORT} -> ${THEME_PATH}"
 
           lftp -c "
+            set net:max-retries 3;
+            set net:timeout 45;
+            set sftp:auto-confirm yes;
+            set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
+            open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
+            cd ${THEME_PATH};
+            bye
+          " || { echo "::error::Remote path does not exist: ${THEME_PATH}. Set OVH_SFTP_THEME_PATH correctly."; exit 1; }
+
+          lftp -c "
             set net:max-retries 5;
             set net:timeout 120;
             set net:reconnect-interval-base 10;
@@ -99,7 +109,7 @@ jobs:
             set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
 
             open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
-            mkdir -p ${THEME_PATH};
+            cd ${THEME_PATH};
             mirror -R --overwrite --parallel=8 \
               -X .git \
               -X node_modules \
@@ -162,6 +172,16 @@ jobs:
 
           redeploy_sftp() {
             lftp -c "
+              set net:max-retries 3;
+              set net:timeout 45;
+              set sftp:auto-confirm yes;
+              set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
+              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
+              cd ${THEME_PATH};
+              bye
+            " || { echo "::error::Remote path does not exist: ${THEME_PATH}. Set OVH_SFTP_THEME_PATH correctly."; exit 1; }
+
+            lftp -c "
               set net:max-retries 5;
               set net:timeout 120;
               set mirror:parallel-transfer-count 8;
@@ -169,7 +189,7 @@ jobs:
               set sftp:auto-confirm yes;
               set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
               open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
-              mkdir -p ${THEME_PATH};
+              cd ${THEME_PATH};
               mirror -R --overwrite --parallel=8 \
                 -X .git \
                 -X node_modules \
