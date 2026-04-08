@@ -53,7 +53,7 @@ get_header();
         </div>
     </div>
 </section>
-<section id="infos" class="bg-main-400">
+<section id="infos" class="bg-main">
     <div class="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
         <div class="grid lg:grid-cols-3 gap-6 place-items-center text-center rounded-md p-4">
             <article class="text-black">

@@ -137,7 +137,7 @@
 .duplicate-form select,
 .duplicate-form input[type="text"],
 .duplicate-form input[type="number"] {
-  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-main-500 focus:border-main-500;
+  @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-main focus:border-main-500;
 }
 
 .duplicate-form .checkbox-group {
@@ -149,7 +149,7 @@
 }
 
 .duplicate-form .checkbox-group input[type="checkbox"] {
-  @apply w-4 h-4 text-main-500 border-gray-300 rounded focus:ring-main-500;
+  @apply w-4 h-4 text-main-500 border-gray-300 rounded focus:ring-main;
 }
 
 /* Duplicate Status Indicators */

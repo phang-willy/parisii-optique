@@ -62,7 +62,7 @@ get_header(); ?>
                                 <?php endif; ?>
                             </div>
                             
-                            <h2 class="text-xl font-heading font-semibold text-gray-900 dark:text-white mb-3 group-hover:text-main-600 dark:group-hover:text-main-400 transition-colors">
+                            <h2 class="text-xl font-heading font-semibold text-gray-900 dark:text-white mb-3 bg-secondary bg-main transition-colors">
                                 <a href="<?php the_permalink(); ?>">
                                     <?php the_title(); ?>
                                 </a>
@@ -72,7 +72,7 @@ get_header(); ?>
                                 <?php the_excerpt(); ?>
                             </div>
                             
-                            <a href="<?php the_permalink(); ?>" class="inline-flex items-center text-main-600 dark:text-main-400 hover:text-main-700 dark:hover:text-main-300 font-medium transition-colors">
+                            <a href="<?php the_permalink(); ?>" class="inline-flex items-center bg-secondary bg-main bg-secondary bg-secondary font-medium transition-colors">
                                 Lire la suite
                                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>

@@ -19,12 +19,20 @@ class Parisii_Optique_Brand_Display {
     /**
      * Get filtered brands
      */
-    public static function get_filtered_brands() {
+    public static function get_filtered_brands($props = array()) {
+        $props = wp_parse_args($props, array(
+            'kids' => null, // true => kids only, false/null => all
+        ));
+
         $args = array(
             'visible_only' => true,
             'orderby' => 'name',
             'order' => 'ASC',
         );
+
+        if ($props['kids'] === true) {
+            $args['kids'] = 1;
+        }
         
         // Search filter
         if (!empty($_GET['brand_search'])) {
@@ -58,12 +66,12 @@ class Parisii_Optique_Brand_Display {
                             name="brand_search" 
                             value="<?php echo esc_attr($search_query); ?>"
                             placeholder="<?php esc_attr_e('Nom de la marque...', 'parisii-optique-plugin'); ?>"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-main-500 focus:border-main-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 bg-secondary bg-secondary dark:bg-gray-800 dark:border-gray-700 dark:text-white"
                         >
                     </div>
                     
                     <div class="flex gap-2">
-                        <button type="submit" class="flex-1 px-4 py-2 bg-main-500 hover:bg-main-600 text-white rounded-lg font-medium transition-colors duration-200 focus:ring-2 focus:ring-main-500 focus:ring-offset-2">
+                        <button type="submit" class="flex-1 px-4 py-2 bg-secondary bg-secondary text-white rounded-lg font-medium transition-colors duration-200 focus:ring-2 bg-secondary focus:ring-offset-2">
                             <?php _e('Filtrer', 'parisii-optique-plugin'); ?>
                         </button>
                         <a href="<?php echo get_permalink(); ?>" class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white text-gray-900 text-center rounded-lg font-medium transition-colors duration-200">
@@ -111,8 +119,8 @@ class Parisii_Optique_Brand_Display {
     /**
      * Render brands grid
      */
-    public static function render_brands_grid() {
-        $brands = self::get_filtered_brands();
+    public static function render_brands_grid($props = array()) {
+        $brands = self::get_filtered_brands($props);
         
         if (empty($brands)) {
             echo '<div class="card text-center py-12 bg-gray-50 dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700">';

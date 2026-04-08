@@ -1,4 +1,6 @@
 name: "PRE-PRODUCTION - Deploy WordPress Theme"
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 on:
   push:
@@ -17,7 +19,22 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build theme assets
+        run: npm run build
+
+      - name: Verify built CSS exists
+        run: |
+          test -f dist/style.css || (echo "::error::dist/style.css not generated"; exit 1)
 
       - name: Verify pre-prod server is operational
         run: |
@@ -67,7 +84,7 @@ jobs:
           THEME_PATH="/home/${{ secrets.HOSTINGER_SSH_USER }}/domains/${{ secrets.HOSTINGER_DOMAIN }}/public_html/wp-content/themes/parisii-optique"
           verify_theme() {
             ssh -i ~/.ssh/deploy_key -p ${{ secrets.HOSTINGER_SSH_PORT }} ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }} \
-              "test -f $THEME_PATH/style.css && test -f $THEME_PATH/functions.php"
+              "test -f $THEME_PATH/style.css && test -f $THEME_PATH/dist/style.css && test -f $THEME_PATH/functions.php"
           }
           if ! verify_theme; then
             echo "Theme files missing, retrying deploy..."
@@ -78,11 +95,11 @@ jobs:
               --exclude='.cursorrules' --exclude='infos_ignore.md' --exclude='.env' \
               ./ ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }}:$THEME_PATH/
             if ! verify_theme; then
-              echo "::error::DEPLOY FAILED — Theme not found on server. style.css and/or functions.php missing in $THEME_PATH"
+              echo "::error::DEPLOY FAILED — Theme not found on server. style.css, dist/style.css and/or functions.php missing in $THEME_PATH"
               exit 1
             fi
           fi
-          echo "Theme OK: style.css and functions.php found"
+          echo "Theme OK: style.css, dist/style.css and functions.php found"
 
       - name: Purge cache
         if: github.event_name == 'push' && vars.HOSTINGER_PURGE_ENABLED == 'true'

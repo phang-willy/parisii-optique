@@ -21,7 +21,7 @@
     } else {
         // Breadcrumb avec hiérarchie des pages
         echo '<nav class="breadcrumb text-sm text-gray-600 dark:text-gray-400 flex flex-wrap gap-1" aria-label="breadcrumb">';
-        echo '<a href="' . esc_url(home_url('/')) . '" class="hover:text-main-500">' . __('Accueil', 'parisii-optique') . '</a>';
+        echo '<a href="' . esc_url(home_url('/')) . '">' . __('Accueil', 'parisii-optique') . '</a>';
         
         // Récupérer les pages parentes
         $parents = array();
@@ -42,7 +42,7 @@
                   <path d="m9 18 6-6-6-6"/>
               </svg>
             <?php
-            echo '<a href="' . esc_url(get_permalink($parent)) . '" class="hover:text-main-500">' . get_the_title($parent) . '</a>';
+            echo '<a href="' . esc_url(get_permalink($parent)) . '">' . get_the_title($parent) . '</a>';
         }
         
         // Page actuelle
