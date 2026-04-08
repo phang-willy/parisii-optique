@@ -48,82 +48,46 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y lftp
 
-      # Choose ONE of the next two deploy steps:
-      # - OVH mutualized most often supports FTPS (explicit TLS) and NOT SFTP.
-      # - If your OVH really supports SFTP, switch protocol to sftp:// and remove the FTP TLS settings.
-
-      # OVH mutualisé: souvent FTP clair sur :21, parfois FTPS explicite, parfois implicite :990
-      - name: Deploy or update theme on OVH via FTP / FTPS
+      # Hébergement web OVH (cluster) : FileZilla utilise SFTP sur le port 22, pas FTP/FTPS.
+      # Secrets : OVH_FTP_HOST = ftp.clusterXXX.hosting.ovh.net, OVH_FTP_USER / OVH_FTP_PASSWORD = identiques SFTP.
+      # Optionnel : OVH_SFTP_PORT (défaut 22).
+      - name: Deploy or update theme on OVH via SFTP
         if: github.event_name == 'push'
         env:
           REMOTE_PATH: /home/${{ secrets.OVH_FTP_USER }}/www/wp-content/themes/parisii-optique
           OVH_FTP_USER: ${{ secrets.OVH_FTP_USER }}
           OVH_FTP_PASSWORD: ${{ secrets.OVH_FTP_PASSWORD }}
           OVH_FTP_HOST: ${{ secrets.OVH_FTP_HOST }}
+          OVH_SFTP_PORT: ${{ secrets.OVH_SFTP_PORT }}
         run: |
-          deploy_ovh_ftps() {
-            local remote_url="$1"
-            echo "Trying FTPS (TLS forced) with ${remote_url}"
-            lftp -c "
-              set net:max-retries 5;
-              set net:timeout 60;
-              set net:reconnect-interval-base 10;
-              set net:limit-rate 0;
+          PORT="${OVH_SFTP_PORT:-22}"
+          echo "Deploy SFTP sftp://${OVH_FTP_HOST}:${PORT} -> ${REMOTE_PATH}"
 
-              set ftp:ssl-allow yes;
-              set ftp:ssl-force yes;
-              set ftp:ssl-protect-data yes;
-              set ssl:verify-certificate no;
+          lftp -c "
+            set net:max-retries 5;
+            set net:timeout 120;
+            set net:reconnect-interval-base 10;
+            set net:limit-rate 0;
+            set mirror:parallel-transfer-count 8;
+            set mirror:parallel-directories yes;
+            set sftp:auto-confirm yes;
+            set sftp:connect-program \"ssh -a -x -o BatchMode=yes -o StrictHostKeyChecking=accept-new\";
 
-              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} ${remote_url};
-              mkdir -p ${REMOTE_PATH};
-              mirror -R -v --overwrite \
-                -X .git \
-                -X node_modules \
-                -X .github \
-                -X .gitignore \
-                -X package-lock.json \
-                -X package.json \
-                -X .cursorrules \
-                -X 'infos_ignore.md' \
-                -X .env \
-                ./ ${REMOTE_PATH}/;
-              bye
-            "
-          }
-
-          deploy_ovh_plain_ftp() {
-            local remote_url="$1"
-            echo "Trying plain FTP (no TLS) with ${remote_url}"
-            lftp -c "
-              set net:max-retries 5;
-              set net:timeout 60;
-              set net:reconnect-interval-base 10;
-              set net:limit-rate 0;
-
-              set ftp:ssl-allow no;
-              set ftp:ssl-force no;
-
-              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} ${remote_url};
-              mkdir -p ${REMOTE_PATH};
-              mirror -R -v --overwrite \
-                -X .git \
-                -X node_modules \
-                -X .github \
-                -X .gitignore \
-                -X package-lock.json \
-                -X package.json \
-                -X .cursorrules \
-                -X 'infos_ignore.md' \
-                -X .env \
-                ./ ${REMOTE_PATH}/;
-              bye
-            "
-          }
-
-          deploy_ovh_ftps "ftp://${OVH_FTP_HOST}:21" || \
-            deploy_ovh_ftps "ftps://${OVH_FTP_HOST}:990" || \
-            deploy_ovh_plain_ftp "ftp://${OVH_FTP_HOST}:21"
+            open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
+            mkdir -p ${REMOTE_PATH};
+            mirror -R --overwrite --parallel=8 \
+              -X .git \
+              -X node_modules \
+              -X .github \
+              -X .gitignore \
+              -X package-lock.json \
+              -X package.json \
+              -X .cursorrules \
+              -X 'infos_ignore.md' \
+              -X .env \
+              ./ ${REMOTE_PATH}/;
+            bye
+          "
 
       - name: Verify theme exists (retry deploy if missing)
         if: github.event_name == 'push'
@@ -132,22 +96,43 @@ jobs:
           OVH_FTP_USER: ${{ secrets.OVH_FTP_USER }}
           OVH_FTP_PASSWORD: ${{ secrets.OVH_FTP_PASSWORD }}
           OVH_FTP_HOST: ${{ secrets.OVH_FTP_HOST }}
+          OVH_SFTP_PORT: ${{ secrets.OVH_SFTP_PORT }}
         run: |
-          deploy_ovh_by_url() {
-            local remote_url="$1"
-            lftp -c "
+          PORT="${OVH_SFTP_PORT:-22}"
+
+          verify_theme_sftp() {
+            ROOT_OUTPUT=$(lftp -c "
               set net:max-retries 5;
               set net:timeout 60;
-              set net:reconnect-interval-base 10;
-              set net:limit-rate 0;
+              set sftp:auto-confirm yes;
+              set sftp:connect-program \"ssh -a -x -o BatchMode=yes -o StrictHostKeyChecking=accept-new\";
+              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
+              cls -1 ${REMOTE_PATH}/;
+              bye
+            " 2>&1)
+            DIST_OUTPUT=$(lftp -c "
+              set net:max-retries 5;
+              set net:timeout 60;
+              set sftp:auto-confirm yes;
+              set sftp:connect-program \"ssh -a -x -o BatchMode=yes -o StrictHostKeyChecking=accept-new\";
+              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
+              cls -1 ${REMOTE_PATH}/dist/;
+              bye
+            " 2>&1)
+            echo "$ROOT_OUTPUT" | grep -qw "style.css" && echo "$ROOT_OUTPUT" | grep -qw "functions.php" && echo "$DIST_OUTPUT" | grep -qw "style.css"
+          }
 
-              set ftp:ssl-force true;
-              set ftp:ssl-protect-data true;
-              set ssl:verify-certificate no;
-
-              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} ${remote_url};
+          redeploy_sftp() {
+            lftp -c "
+              set net:max-retries 5;
+              set net:timeout 120;
+              set mirror:parallel-transfer-count 8;
+              set mirror:parallel-directories yes;
+              set sftp:auto-confirm yes;
+              set sftp:connect-program \"ssh -a -x -o BatchMode=yes -o StrictHostKeyChecking=accept-new\";
+              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
               mkdir -p ${REMOTE_PATH};
-              mirror -R -v --overwrite \
+              mirror -R --overwrite --parallel=8 \
                 -X .git \
                 -X node_modules \
                 -X .github \
@@ -162,123 +147,17 @@ jobs:
             "
           }
 
-          deploy_ovh_plain_by_url() {
-            local remote_url="$1"
-            lftp -c "
-              set net:max-retries 5;
-              set net:timeout 60;
-              set net:reconnect-interval-base 10;
-              set net:limit-rate 0;
-
-              set ftp:ssl-allow no;
-              set ftp:ssl-force no;
-
-              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} ${remote_url};
-              mkdir -p ${REMOTE_PATH};
-              mirror -R -v --overwrite \
-                -X .git \
-                -X node_modules \
-                -X .github \
-                -X .gitignore \
-                -X package-lock.json \
-                -X package.json \
-                -X .cursorrules \
-                -X 'infos_ignore.md' \
-                -X .env \
-                ./ ${REMOTE_PATH}/;
-              bye
-            "
-          }
-
-          verify_theme_by_url() {
-            local remote_url="$1"
-            ROOT_OUTPUT=$(lftp -c "
-              set net:max-retries 5;
-              set net:timeout 60;
-
-              set ftp:ssl-force true;
-              set ftp:ssl-protect-data true;
-              set ssl:verify-certificate no;
-
-              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} ${remote_url};
-              cls -1 ${REMOTE_PATH}/;
-              bye
-            " 2>&1)
-            DIST_OUTPUT=$(lftp -c "
-              set net:max-retries 5;
-              set net:timeout 60;
-
-              set ftp:ssl-force true;
-              set ftp:ssl-protect-data true;
-              set ssl:verify-certificate no;
-
-              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} ${remote_url};
-              cls -1 ${REMOTE_PATH}/dist/;
-              bye
-            " 2>&1)
-
-            echo "$ROOT_OUTPUT" | grep -qw "style.css" && echo "$ROOT_OUTPUT" | grep -qw "functions.php" && echo "$DIST_OUTPUT" | grep -qw "style.css"
-          }
-
-          verify_theme_plain() {
-            ROOT_OUTPUT=$(lftp -c "
-              set net:max-retries 5;
-              set net:timeout 60;
-
-              set ftp:ssl-allow no;
-              set ftp:ssl-force no;
-
-              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} ftp://${OVH_FTP_HOST}:21;
-              cls -1 ${REMOTE_PATH}/;
-              bye
-            " 2>&1)
-            DIST_OUTPUT=$(lftp -c "
-              set net:max-retries 5;
-              set net:timeout 60;
-
-              set ftp:ssl-allow no;
-              set ftp:ssl-force no;
-
-              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} ftp://${OVH_FTP_HOST}:21;
-              cls -1 ${REMOTE_PATH}/dist/;
-              bye
-            " 2>&1)
-
-            echo "$ROOT_OUTPUT" | grep -qw "style.css" && echo "$ROOT_OUTPUT" | grep -qw "functions.php" && echo "$DIST_OUTPUT" | grep -qw "style.css"
-          }
-
-          theme_ok=false
-          if verify_theme_by_url "ftp://${OVH_FTP_HOST}:21"; then
-            echo "Theme OK over explicit FTPS (ftp:// + TLS)"
-            theme_ok=true
-          elif verify_theme_by_url "ftps://${OVH_FTP_HOST}:990"; then
-            echo "Theme OK over implicit FTPS (ftps://:990)"
-            theme_ok=true
-          elif verify_theme_plain; then
-            echo "Theme OK over plain FTP (port 21, no TLS)"
-            theme_ok=true
-          fi
-
-          if [ "$theme_ok" != true ]; then
-            echo "Theme files missing, retrying deploy..."
-            deploy_ovh_by_url "ftp://${OVH_FTP_HOST}:21" || \
-              deploy_ovh_by_url "ftps://${OVH_FTP_HOST}:990" || \
-              deploy_ovh_plain_by_url "ftp://${OVH_FTP_HOST}:21"
-            theme_ok=false
-            if verify_theme_by_url "ftp://${OVH_FTP_HOST}:21"; then
-              theme_ok=true
-            elif verify_theme_by_url "ftps://${OVH_FTP_HOST}:990"; then
-              theme_ok=true
-            elif verify_theme_plain; then
-              theme_ok=true
-            fi
-            if [ "$theme_ok" != true ]; then
-              echo "::error::DEPLOY FAILED — Theme not found on server. style.css, dist/style.css and/or functions.php missing in $REMOTE_PATH"
+          if verify_theme_sftp; then
+            echo "Theme OK (SFTP): style.css, dist/style.css, functions.php"
+          else
+            echo "Theme missing on server, retrying SFTP deploy..."
+            redeploy_sftp
+            if ! verify_theme_sftp; then
+              echo "::error::DEPLOY FAILED — Theme not found after SFTP. Check REMOTE_PATH and OVH_FTP_HOST (e.g. ftp.cluster121.hosting.ovh.net)."
               exit 1
             fi
+            echo "Theme OK after retry (SFTP)"
           fi
-
-          echo "Theme OK: style.css, dist/style.css and functions.php found"
 
       - name: Purge cache
         if: github.event_name == 'push' && vars.OVH_PURGE_ENABLED == 'true'
