@@ -52,7 +52,8 @@ jobs:
       # - OVH mutualized most often supports FTPS (explicit TLS) and NOT SFTP.
       # - If your OVH really supports SFTP, switch protocol to sftp:// and remove the FTP TLS settings.
 
-      - name: Deploy or update theme on OVH via FTPS
+      # OVH mutualisé: souvent FTP clair sur :21, parfois FTPS explicite, parfois implicite :990
+      - name: Deploy or update theme on OVH via FTP / FTPS
         if: github.event_name == 'push'
         env:
           REMOTE_PATH: /home/${{ secrets.OVH_FTP_USER }}/www/wp-content/themes/parisii-optique
@@ -62,7 +63,7 @@ jobs:
         run: |
           deploy_ovh_ftps() {
             local remote_url="$1"
-            echo "Trying deploy with ${remote_url}"
+            echo "Trying FTPS (TLS forced) with ${remote_url}"
             lftp -c "
               set net:max-retries 5;
               set net:timeout 60;
@@ -91,7 +92,38 @@ jobs:
             "
           }
 
-          deploy_ovh_ftps "ftp://${OVH_FTP_HOST}:21" || deploy_ovh_ftps "ftps://${OVH_FTP_HOST}:990"
+          deploy_ovh_plain_ftp() {
+            local remote_url="$1"
+            echo "Trying plain FTP (no TLS) with ${remote_url}"
+            lftp -c "
+              set net:max-retries 5;
+              set net:timeout 60;
+              set net:reconnect-interval-base 10;
+              set net:limit-rate 0;
+
+              set ftp:ssl-allow no;
+              set ftp:ssl-force no;
+
+              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} ${remote_url};
+              mkdir -p ${REMOTE_PATH};
+              mirror -R -v --overwrite \
+                -X .git \
+                -X node_modules \
+                -X .github \
+                -X .gitignore \
+                -X package-lock.json \
+                -X package.json \
+                -X .cursorrules \
+                -X 'infos_ignore.md' \
+                -X .env \
+                ./ ${REMOTE_PATH}/;
+              bye
+            "
+          }
+
+          deploy_ovh_ftps "ftp://${OVH_FTP_HOST}:21" || \
+            deploy_ovh_ftps "ftps://${OVH_FTP_HOST}:990" || \
+            deploy_ovh_plain_ftp "ftp://${OVH_FTP_HOST}:21"
 
       - name: Verify theme exists (retry deploy if missing)
         if: github.event_name == 'push'
@@ -112,6 +144,34 @@ jobs:
               set ftp:ssl-force true;
               set ftp:ssl-protect-data true;
               set ssl:verify-certificate no;
+
+              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} ${remote_url};
+              mkdir -p ${REMOTE_PATH};
+              mirror -R -v --overwrite \
+                -X .git \
+                -X node_modules \
+                -X .github \
+                -X .gitignore \
+                -X package-lock.json \
+                -X package.json \
+                -X .cursorrules \
+                -X 'infos_ignore.md' \
+                -X .env \
+                ./ ${REMOTE_PATH}/;
+              bye
+            "
+          }
+
+          deploy_ovh_plain_by_url() {
+            local remote_url="$1"
+            lftp -c "
+              set net:max-retries 5;
+              set net:timeout 60;
+              set net:reconnect-interval-base 10;
+              set net:limit-rate 0;
+
+              set ftp:ssl-allow no;
+              set ftp:ssl-force no;
 
               open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} ${remote_url};
               mkdir -p ${REMOTE_PATH};
@@ -160,14 +220,59 @@ jobs:
             echo "$ROOT_OUTPUT" | grep -qw "style.css" && echo "$ROOT_OUTPUT" | grep -qw "functions.php" && echo "$DIST_OUTPUT" | grep -qw "style.css"
           }
 
+          verify_theme_plain() {
+            ROOT_OUTPUT=$(lftp -c "
+              set net:max-retries 5;
+              set net:timeout 60;
+
+              set ftp:ssl-allow no;
+              set ftp:ssl-force no;
+
+              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} ftp://${OVH_FTP_HOST}:21;
+              cls -1 ${REMOTE_PATH}/;
+              bye
+            " 2>&1)
+            DIST_OUTPUT=$(lftp -c "
+              set net:max-retries 5;
+              set net:timeout 60;
+
+              set ftp:ssl-allow no;
+              set ftp:ssl-force no;
+
+              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} ftp://${OVH_FTP_HOST}:21;
+              cls -1 ${REMOTE_PATH}/dist/;
+              bye
+            " 2>&1)
+
+            echo "$ROOT_OUTPUT" | grep -qw "style.css" && echo "$ROOT_OUTPUT" | grep -qw "functions.php" && echo "$DIST_OUTPUT" | grep -qw "style.css"
+          }
+
+          theme_ok=false
           if verify_theme_by_url "ftp://${OVH_FTP_HOST}:21"; then
             echo "Theme OK over explicit FTPS (ftp:// + TLS)"
+            theme_ok=true
           elif verify_theme_by_url "ftps://${OVH_FTP_HOST}:990"; then
             echo "Theme OK over implicit FTPS (ftps://:990)"
-          else
+            theme_ok=true
+          elif verify_theme_plain; then
+            echo "Theme OK over plain FTP (port 21, no TLS)"
+            theme_ok=true
+          fi
+
+          if [ "$theme_ok" != true ]; then
             echo "Theme files missing, retrying deploy..."
-            deploy_ovh_by_url "ftp://${OVH_FTP_HOST}:21" || deploy_ovh_by_url "ftps://${OVH_FTP_HOST}:990"
-            if ! verify_theme_by_url "ftp://${OVH_FTP_HOST}:21" && ! verify_theme_by_url "ftps://${OVH_FTP_HOST}:990"; then
+            deploy_ovh_by_url "ftp://${OVH_FTP_HOST}:21" || \
+              deploy_ovh_by_url "ftps://${OVH_FTP_HOST}:990" || \
+              deploy_ovh_plain_by_url "ftp://${OVH_FTP_HOST}:21"
+            theme_ok=false
+            if verify_theme_by_url "ftp://${OVH_FTP_HOST}:21"; then
+              theme_ok=true
+            elif verify_theme_by_url "ftps://${OVH_FTP_HOST}:990"; then
+              theme_ok=true
+            elif verify_theme_plain; then
+              theme_ok=true
+            fi
+            if [ "$theme_ok" != true ]; then
               echo "::error::DEPLOY FAILED — Theme not found on server. style.css, dist/style.css and/or functions.php missing in $REMOTE_PATH"
               exit 1
             fi
