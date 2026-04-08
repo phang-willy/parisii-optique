@@ -21,6 +21,40 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Verify production server is operational
+        run: |
+          SITE_URL="https://${{ secrets.OVH_DOMAIN }}"
+          echo "Checking $SITE_URL..."
+          curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Server unreachable or returned error"; exit 1)
+
+      - name: Install lftp
+        if: github.event_name == 'push'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lftp
+
+      # Juste après le check HTTP : login SFTP avant npm/build (échec rapide si secrets faux).
+      - name: Verify OVH SFTP login
+        if: github.event_name == 'push'
+        env:
+          OVH_FTP_USER: ${{ secrets.OVH_FTP_USER }}
+          OVH_FTP_PASSWORD: ${{ secrets.OVH_FTP_PASSWORD }}
+          OVH_FTP_HOST: ${{ secrets.OVH_FTP_HOST }}
+          OVH_SFTP_PORT: ${{ secrets.OVH_SFTP_PORT }}
+        run: |
+          PORT="${OVH_SFTP_PORT:-22}"
+          echo "SFTP test: ${OVH_FTP_HOST}:${PORT} (user: ${OVH_FTP_USER})"
+          lftp -c "
+            set net:max-retries 3;
+            set net:timeout 45;
+            set sftp:auto-confirm yes;
+            set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
+            open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
+            pwd;
+            bye
+          " || { echo "::error::SFTP login échoué — vérifie OVH_FTP_USER, OVH_FTP_PASSWORD, OVH_FTP_HOST, OVH_SFTP_PORT (défaut 22)."; exit 1; }
+          echo "SFTP login OK"
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
@@ -36,31 +70,23 @@ jobs:
         run: |
           test -f dist/style.css || (echo "::error::dist/style.css not generated"; exit 1)
 
-      - name: Verify production server is operational
-        run: |
-          SITE_URL="https://${{ secrets.OVH_DOMAIN }}"
-          echo "Checking $SITE_URL..."
-          curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Server unreachable or returned error"; exit 1)
-
-      - name: Install lftp
-        if: github.event_name == 'push'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y lftp
-
-      # SFTP OVH (FileZilla) : lftp exige user+password dans open (-u user,pass), sinon GetPass() en CI.
-      # Pas de BatchMode=yes sur ssh. Si le mot de passe contient une virgule, utiliser une clé SSH à la place.
+      # Chemin par défaut = celui affiché dans FileZilla : /home/USER/www/wp-content/themes/parisii-optique
+      # Surcharge : secret OVH_SFTP_THEME_PATH (relatif ou absolu si ton hébergeur diffère).
+      # lftp : open -u user,password (virgule dans le MDP = cassé → clé SSH).
       - name: Deploy or update theme on OVH via SFTP
         if: github.event_name == 'push'
         env:
-          REMOTE_PATH: /home/${{ secrets.OVH_FTP_USER }}/www/wp-content/themes/parisii-optique
+          OVH_SFTP_THEME_PATH: ${{ secrets.OVH_SFTP_THEME_PATH }}
           OVH_FTP_USER: ${{ secrets.OVH_FTP_USER }}
           OVH_FTP_PASSWORD: ${{ secrets.OVH_FTP_PASSWORD }}
           OVH_FTP_HOST: ${{ secrets.OVH_FTP_HOST }}
           OVH_SFTP_PORT: ${{ secrets.OVH_SFTP_PORT }}
         run: |
           PORT="${OVH_SFTP_PORT:-22}"
-          echo "Deploy SFTP sftp://${OVH_FTP_HOST}:${PORT} -> ${REMOTE_PATH}"
+          DEFAULT_THEME="/home/${OVH_FTP_USER}/www/wp-content/themes/parisii-optique"
+          THEME_PATH="${OVH_SFTP_THEME_PATH:-$DEFAULT_THEME}"
+          THEME_PATH="${THEME_PATH#./}"
+          echo "Deploy SFTP sftp://${OVH_FTP_HOST}:${PORT} -> ${THEME_PATH}"
 
           lftp -c "
             set net:max-retries 5;
@@ -73,7 +99,7 @@ jobs:
             set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
 
             open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
-            mkdir -p ${REMOTE_PATH};
+            mkdir -p ${THEME_PATH};
             mirror -R --overwrite --parallel=8 \
               -X .git \
               -X node_modules \
@@ -84,20 +110,33 @@ jobs:
               -X .cursorrules \
               -X 'infos_ignore.md' \
               -X .env \
-              ./ ${REMOTE_PATH}/;
+              ./ ${THEME_PATH}/;
             bye
           "
 
       - name: Verify theme exists (retry deploy if missing)
         if: github.event_name == 'push'
         env:
-          REMOTE_PATH: /home/${{ secrets.OVH_FTP_USER }}/www/wp-content/themes/parisii-optique
+          OVH_SFTP_THEME_PATH: ${{ secrets.OVH_SFTP_THEME_PATH }}
           OVH_FTP_USER: ${{ secrets.OVH_FTP_USER }}
           OVH_FTP_PASSWORD: ${{ secrets.OVH_FTP_PASSWORD }}
           OVH_FTP_HOST: ${{ secrets.OVH_FTP_HOST }}
           OVH_SFTP_PORT: ${{ secrets.OVH_SFTP_PORT }}
         run: |
           PORT="${OVH_SFTP_PORT:-22}"
+          DEFAULT_THEME="/home/${OVH_FTP_USER}/www/wp-content/themes/parisii-optique"
+          THEME_PATH="${OVH_SFTP_THEME_PATH:-$DEFAULT_THEME}"
+          THEME_PATH="${THEME_PATH#./}"
+
+          echo "Re-check SFTP login before theme verification..."
+          lftp -c "
+            set net:max-retries 3;
+            set net:timeout 45;
+            set sftp:auto-confirm yes;
+            set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
+            open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
+            bye
+          " || { echo "::error::SFTP login échoué avant vérification du thème."; exit 1; }
 
           verify_theme_sftp() {
             ROOT_OUTPUT=$(lftp -c "
@@ -106,7 +145,7 @@ jobs:
               set sftp:auto-confirm yes;
               set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
               open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
-              cls -1 ${REMOTE_PATH}/;
+              cls -1 ${THEME_PATH}/;
               bye
             " 2>&1)
             DIST_OUTPUT=$(lftp -c "
@@ -115,7 +154,7 @@ jobs:
               set sftp:auto-confirm yes;
               set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
               open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
-              cls -1 ${REMOTE_PATH}/dist/;
+              cls -1 ${THEME_PATH}/dist/;
               bye
             " 2>&1)
             echo "$ROOT_OUTPUT" | grep -qw "style.css" && echo "$ROOT_OUTPUT" | grep -qw "functions.php" && echo "$DIST_OUTPUT" | grep -qw "style.css"
@@ -130,7 +169,7 @@ jobs:
               set sftp:auto-confirm yes;
               set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
               open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
-              mkdir -p ${REMOTE_PATH};
+              mkdir -p ${THEME_PATH};
               mirror -R --overwrite --parallel=8 \
                 -X .git \
                 -X node_modules \
@@ -141,7 +180,7 @@ jobs:
                 -X .cursorrules \
                 -X 'infos_ignore.md' \
                 -X .env \
-                ./ ${REMOTE_PATH}/;
+                ./ ${THEME_PATH}/;
               bye
             "
           }
@@ -152,7 +191,7 @@ jobs:
             echo "Theme missing on server, retrying SFTP deploy..."
             redeploy_sftp
             if ! verify_theme_sftp; then
-              echo "::error::DEPLOY FAILED — Theme not found after SFTP. Check REMOTE_PATH and OVH_FTP_HOST (e.g. ftp.cluster121.hosting.ovh.net)."
+              echo "::error::DEPLOY FAILED — Vérifie OVH_SFTP_THEME_PATH (chemin vu depuis FileZilla) et OVH_FTP_HOST."
               exit 1
             fi
             echo "Theme OK after retry (SFTP)"
