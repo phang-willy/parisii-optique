@@ -42,15 +42,16 @@ jobs:
           echo "Checking $SITE_URL..."
           curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Server unreachable or returned error"; exit 1)
 
-      - name: Install lftp
+      # sshpass : auth mot de passe non interactive (lftp+ssh seul échoue souvent en CI).
+      - name: Install lftp and sshpass
         if: github.event_name == 'push'
         run: |
           sudo apt-get update
-          sudo apt-get install -y lftp
+          sudo apt-get install -y lftp sshpass
 
-      # Hébergement web OVH (cluster) : FileZilla utilise SFTP sur le port 22, pas FTP/FTPS.
-      # Secrets : OVH_FTP_HOST = ftp.clusterXXX.hosting.ovh.net, OVH_FTP_USER / OVH_FTP_PASSWORD = identiques SFTP.
-      # Optionnel : OVH_SFTP_PORT (défaut 22).
+      # Hébergement web OVH (cluster) : SFTP port 22 (comme FileZilla).
+      # Secrets : OVH_FTP_HOST, OVH_FTP_USER, OVH_FTP_PASSWORD (identiques FileZilla). Optionnel : OVH_SFTP_PORT (défaut 22).
+      # Ne pas utiliser BatchMode=yes avec un mot de passe : SSH refuse alors password auth.
       - name: Deploy or update theme on OVH via SFTP
         if: github.event_name == 'push'
         env:
@@ -59,6 +60,7 @@ jobs:
           OVH_FTP_PASSWORD: ${{ secrets.OVH_FTP_PASSWORD }}
           OVH_FTP_HOST: ${{ secrets.OVH_FTP_HOST }}
           OVH_SFTP_PORT: ${{ secrets.OVH_SFTP_PORT }}
+          SSHPASS: ${{ secrets.OVH_FTP_PASSWORD }}
         run: |
           PORT="${OVH_SFTP_PORT:-22}"
           echo "Deploy SFTP sftp://${OVH_FTP_HOST}:${PORT} -> ${REMOTE_PATH}"
@@ -71,9 +73,9 @@ jobs:
             set mirror:parallel-transfer-count 8;
             set mirror:parallel-directories yes;
             set sftp:auto-confirm yes;
-            set sftp:connect-program \"ssh -a -x -o BatchMode=yes -o StrictHostKeyChecking=accept-new\";
+            set sftp:connect-program \"sshpass -e ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
 
-            open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
+            open -u ${OVH_FTP_USER} sftp://${OVH_FTP_HOST}:${PORT};
             mkdir -p ${REMOTE_PATH};
             mirror -R --overwrite --parallel=8 \
               -X .git \
@@ -97,6 +99,7 @@ jobs:
           OVH_FTP_PASSWORD: ${{ secrets.OVH_FTP_PASSWORD }}
           OVH_FTP_HOST: ${{ secrets.OVH_FTP_HOST }}
           OVH_SFTP_PORT: ${{ secrets.OVH_SFTP_PORT }}
+          SSHPASS: ${{ secrets.OVH_FTP_PASSWORD }}
         run: |
           PORT="${OVH_SFTP_PORT:-22}"
 
@@ -105,8 +108,8 @@ jobs:
               set net:max-retries 5;
               set net:timeout 60;
               set sftp:auto-confirm yes;
-              set sftp:connect-program \"ssh -a -x -o BatchMode=yes -o StrictHostKeyChecking=accept-new\";
-              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
+              set sftp:connect-program \"sshpass -e ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
+              open -u ${OVH_FTP_USER} sftp://${OVH_FTP_HOST}:${PORT};
               cls -1 ${REMOTE_PATH}/;
               bye
             " 2>&1)
@@ -114,8 +117,8 @@ jobs:
               set net:max-retries 5;
               set net:timeout 60;
               set sftp:auto-confirm yes;
-              set sftp:connect-program \"ssh -a -x -o BatchMode=yes -o StrictHostKeyChecking=accept-new\";
-              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
+              set sftp:connect-program \"sshpass -e ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
+              open -u ${OVH_FTP_USER} sftp://${OVH_FTP_HOST}:${PORT};
               cls -1 ${REMOTE_PATH}/dist/;
               bye
             " 2>&1)
@@ -129,8 +132,8 @@ jobs:
               set mirror:parallel-transfer-count 8;
               set mirror:parallel-directories yes;
               set sftp:auto-confirm yes;
-              set sftp:connect-program \"ssh -a -x -o BatchMode=yes -o StrictHostKeyChecking=accept-new\";
-              open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
+              set sftp:connect-program \"sshpass -e ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
+              open -u ${OVH_FTP_USER} sftp://${OVH_FTP_HOST}:${PORT};
               mkdir -p ${REMOTE_PATH};
               mirror -R --overwrite --parallel=8 \
                 -X .git \
