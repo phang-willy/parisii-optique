@@ -52,13 +52,24 @@ class Parisii_Optique_Brand_Display {
      * Render brands grid
      */
     public static function render_brands_grid($props = array()) {
-        $brands = Parisii_Optique_Brand::get_all(
+        $props = wp_parse_args(
+            $props,
             array(
-                'visible_only' => true,
-                'orderby'      => 'name',
-                'order'        => 'ASC',
+                'kids' => null,
             )
         );
+
+        $args = array(
+            'visible_only' => true,
+            'orderby'      => 'name',
+            'order'        => 'ASC',
+        );
+
+        if ($props['kids'] === true) {
+            $args['kids'] = 1;
+        }
+
+        $brands = Parisii_Optique_Brand::get_all($args);
         
         echo '<div class="card-layout md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">';
         foreach ($brands as $brand) {
