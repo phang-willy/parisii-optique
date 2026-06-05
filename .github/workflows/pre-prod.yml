@@ -25,16 +25,18 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: "24"
+          cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build theme assets
         run: npm run build
 
       - name: Verify built CSS exists
         run: |
-          test -f dist/style.css || (echo "::error::dist/style.css not generated"; exit 1)
+          test -s dist/style.css || (echo "::error::dist/style.css not generated or empty"; exit 1)
+          echo "dist/style.css size: $(wc -c < dist/style.css) bytes"
 
       - name: Verify pre-prod server is operational
         run: |
@@ -42,64 +44,170 @@ jobs:
           echo "Checking $SITE_URL..."
           curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Server unreachable or returned error"; exit 1)
 
-      - name: Setup SSH
+      - name: Install lftp
         if: github.event_name == 'push'
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.HOSTINGER_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p ${{ secrets.HOSTINGER_SSH_PORT }} "${{ secrets.HOSTINGER_SSH_HOST }}" >> ~/.ssh/known_hosts
+          sudo apt-get update
+          sudo apt-get install -y lftp
 
-      - name: Test SSH login
+      - name: Prepare optional SFTP SSH key
         if: github.event_name == 'push'
+        env:
+          HOSTINGER_SSH_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
         run: |
-          ssh -i ~/.ssh/deploy_key \
-            -p ${{ secrets.HOSTINGER_SSH_PORT }} \
-            -o BatchMode=yes \
-            -o IdentitiesOnly=yes \
-            ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }} "whoami && pwd"
-
-      - name: Deploy or update theme on Hostinger (sync changed files only)
-        if: github.event_name == 'push'
-        run: |
-          THEME_PATH="/home/${{ secrets.HOSTINGER_SSH_USER }}/domains/${{ secrets.HOSTINGER_DOMAIN }}/public_html/wp-content/themes/parisii-optique"
-          ssh -i ~/.ssh/deploy_key -p ${{ secrets.HOSTINGER_SSH_PORT }} \
-            -o BatchMode=yes -o IdentitiesOnly=yes \
-            ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }} "mkdir -p $THEME_PATH"
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.HOSTINGER_SSH_PORT }} -o BatchMode=yes -o IdentitiesOnly=yes" \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='.github' \
-            --exclude='.gitignore' \
-            --exclude='.cursorrules' \
-            --exclude='infos_ignore.md' \
-            --exclude='.env' \
-            ./ \
-            ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }}:$THEME_PATH/
-
-      - name: Verify theme exists (retry deploy if missing)
-        if: github.event_name == 'push'
-        run: |
-          THEME_PATH="/home/${{ secrets.HOSTINGER_SSH_USER }}/domains/${{ secrets.HOSTINGER_DOMAIN }}/public_html/wp-content/themes/parisii-optique"
-          verify_theme() {
-            ssh -i ~/.ssh/deploy_key -p ${{ secrets.HOSTINGER_SSH_PORT }} ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }} \
-              "test -f $THEME_PATH/style.css && test -f $THEME_PATH/dist/style.css && test -f $THEME_PATH/functions.php"
-          }
-          if ! verify_theme; then
-            echo "Theme files missing, retrying deploy..."
-            rsync -avz --delete \
-              -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.HOSTINGER_SSH_PORT }} -o BatchMode=yes -o IdentitiesOnly=yes" \
-              --exclude='.git' --exclude='node_modules' --exclude='.github' \
-              --exclude='.gitignore' --exclude='package-lock.json' --exclude='package.json' \
-              --exclude='.cursorrules' --exclude='infos_ignore.md' --exclude='.env' \
-              ./ ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }}:$THEME_PATH/
-            if ! verify_theme; then
-              echo "::error::DEPLOY FAILED — Theme not found on server. style.css, dist/style.css and/or functions.php missing in $THEME_PATH"
-              exit 1
-            fi
+          if [ -n "${HOSTINGER_SSH_KEY}" ]; then
+            mkdir -p ~/.ssh
+            printf '%s\n' "${HOSTINGER_SSH_KEY}" > ~/.ssh/deploy_key
+            chmod 600 ~/.ssh/deploy_key
           fi
-          echo "Theme OK: style.css, dist/style.css and functions.php found"
+
+      - name: Verify Hostinger SFTP login and path
+        if: github.event_name == 'push'
+        env:
+          HOSTINGER_DOMAIN: ${{ secrets.HOSTINGER_DOMAIN }}
+          HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST || secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER || secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          HOSTINGER_SFTP_PORT: ${{ secrets.HOSTINGER_SFTP_PORT || secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SFTP_THEME_PATH: ${{ secrets.HOSTINGER_SFTP_THEME_PATH }}
+        run: |
+          PORT="${HOSTINGER_SFTP_PORT:-22}"
+          THEME_PATH="${HOSTINGER_SFTP_THEME_PATH:-/home/${HOSTINGER_FTP_USER}/domains/${HOSTINGER_DOMAIN}/public_html/wp-content/themes/parisii-optique}"
+          THEME_PATH="${THEME_PATH#./}"
+
+          test -n "${HOSTINGER_FTP_HOST}" || (echo "::error::HOSTINGER_FTP_HOST or HOSTINGER_SSH_HOST is required"; exit 1)
+          test -n "${HOSTINGER_FTP_USER}" || (echo "::error::HOSTINGER_FTP_USER or HOSTINGER_SSH_USER is required"; exit 1)
+          if [ -f ~/.ssh/deploy_key ]; then
+            SFTP_CONNECT="ssh -a -x -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes -i ~/.ssh/deploy_key"
+          else
+            test -n "${HOSTINGER_FTP_PASSWORD}" || (echo "::error::HOSTINGER_FTP_PASSWORD or HOSTINGER_SSH_KEY is required for SFTP deploy without remote shell"; exit 1)
+            SFTP_CONNECT="ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no"
+          fi
+
+          echo "SFTP test: ${HOSTINGER_FTP_HOST}:${PORT} -> ${THEME_PATH}"
+          lftp -c "
+            set net:max-retries 3;
+            set net:timeout 45;
+            set sftp:auto-confirm yes;
+            set sftp:connect-program \"${SFTP_CONNECT}\";
+            open -u \"${HOSTINGER_FTP_USER}\",\"${HOSTINGER_FTP_PASSWORD}\" sftp://${HOSTINGER_FTP_HOST}:${PORT};
+            mkdir -p ${THEME_PATH};
+            mkdir -p ${THEME_PATH}/dist;
+            cd ${THEME_PATH};
+            bye
+          " || { echo "::error::SFTP login/path failed. Check HOSTINGER_FTP_HOST, HOSTINGER_FTP_USER, HOSTINGER_FTP_PASSWORD, HOSTINGER_SFTP_PORT and HOSTINGER_SFTP_THEME_PATH."; exit 1; }
+
+      - name: Deploy theme on Hostinger via SFTP
+        if: github.event_name == 'push'
+        env:
+          HOSTINGER_DOMAIN: ${{ secrets.HOSTINGER_DOMAIN }}
+          HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST || secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER || secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          HOSTINGER_SFTP_PORT: ${{ secrets.HOSTINGER_SFTP_PORT || secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SFTP_THEME_PATH: ${{ secrets.HOSTINGER_SFTP_THEME_PATH }}
+        run: |
+          PORT="${HOSTINGER_SFTP_PORT:-22}"
+          THEME_PATH="${HOSTINGER_SFTP_THEME_PATH:-/home/${HOSTINGER_FTP_USER}/domains/${HOSTINGER_DOMAIN}/public_html/wp-content/themes/parisii-optique}"
+          THEME_PATH="${THEME_PATH#./}"
+          if [ -f ~/.ssh/deploy_key ]; then
+            SFTP_CONNECT="ssh -a -x -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes -i ~/.ssh/deploy_key"
+          else
+            test -n "${HOSTINGER_FTP_PASSWORD}" || (echo "::error::HOSTINGER_FTP_PASSWORD or HOSTINGER_SSH_KEY is required for SFTP deploy without remote shell"; exit 1)
+            SFTP_CONNECT="ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no"
+          fi
+
+          echo "Deploy SFTP sftp://${HOSTINGER_FTP_HOST}:${PORT} -> ${THEME_PATH}"
+          lftp -c "
+            set net:max-retries 5;
+            set net:timeout 120;
+            set net:reconnect-interval-base 10;
+            set net:limit-rate 0;
+            set mirror:parallel-transfer-count 8;
+            set mirror:parallel-directories yes;
+            set sftp:auto-confirm yes;
+            set sftp:connect-program \"${SFTP_CONNECT}\";
+
+            open -u \"${HOSTINGER_FTP_USER}\",\"${HOSTINGER_FTP_PASSWORD}\" sftp://${HOSTINGER_FTP_HOST}:${PORT};
+            mkdir -p ${THEME_PATH};
+            mkdir -p ${THEME_PATH}/dist;
+            cd ${THEME_PATH};
+
+            mirror -R --delete --overwrite --parallel=8 \
+              --exclude-glob 'src/**' \
+              -X .git \
+              -X node_modules \
+              -X .github \
+              -X .gitignore \
+              -X package-lock.json \
+              -X package.json \
+              -X webpack.config.js \
+              -X .cursorrules \
+              -X 'infos_ignore.md' \
+              -X .env \
+              -X 'README.md' \
+              -X wp-config.php \
+              ./ ${THEME_PATH}/;
+
+            put -O ${THEME_PATH}/dist dist/style.css;
+            mirror -R --overwrite blocks/dist ${THEME_PATH}/blocks/dist;
+            bye
+          "
+
+      - name: Verify deployed theme files via SFTP
+        if: github.event_name == 'push'
+        env:
+          HOSTINGER_DOMAIN: ${{ secrets.HOSTINGER_DOMAIN }}
+          HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST || secrets.HOSTINGER_SSH_HOST }}
+          HOSTINGER_FTP_USER: ${{ secrets.HOSTINGER_FTP_USER || secrets.HOSTINGER_SSH_USER }}
+          HOSTINGER_FTP_PASSWORD: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          HOSTINGER_SFTP_PORT: ${{ secrets.HOSTINGER_SFTP_PORT || secrets.HOSTINGER_SSH_PORT }}
+          HOSTINGER_SFTP_THEME_PATH: ${{ secrets.HOSTINGER_SFTP_THEME_PATH }}
+        run: |
+          PORT="${HOSTINGER_SFTP_PORT:-22}"
+          THEME_PATH="${HOSTINGER_SFTP_THEME_PATH:-/home/${HOSTINGER_FTP_USER}/domains/${HOSTINGER_DOMAIN}/public_html/wp-content/themes/parisii-optique}"
+          THEME_PATH="${THEME_PATH#./}"
+          if [ -f ~/.ssh/deploy_key ]; then
+            SFTP_CONNECT="ssh -a -x -o StrictHostKeyChecking=accept-new -o IdentitiesOnly=yes -i ~/.ssh/deploy_key"
+          else
+            test -n "${HOSTINGER_FTP_PASSWORD}" || (echo "::error::HOSTINGER_FTP_PASSWORD or HOSTINGER_SSH_KEY is required for SFTP deploy without remote shell"; exit 1)
+            SFTP_CONNECT="ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no"
+          fi
+
+          ROOT_OUTPUT=$(lftp -c "
+            set net:max-retries 3;
+            set net:timeout 60;
+            set sftp:auto-confirm yes;
+            set sftp:connect-program \"${SFTP_CONNECT}\";
+            open -u \"${HOSTINGER_FTP_USER}\",\"${HOSTINGER_FTP_PASSWORD}\" sftp://${HOSTINGER_FTP_HOST}:${PORT};
+            cls -1 ${THEME_PATH}/;
+            bye
+          " 2>&1)
+
+          DIST_OUTPUT=$(lftp -c "
+            set net:max-retries 3;
+            set net:timeout 60;
+            set sftp:auto-confirm yes;
+            set sftp:connect-program \"${SFTP_CONNECT}\";
+            open -u \"${HOSTINGER_FTP_USER}\",\"${HOSTINGER_FTP_PASSWORD}\" sftp://${HOSTINGER_FTP_HOST}:${PORT};
+            cls -1 ${THEME_PATH}/dist/;
+            bye
+          " 2>&1)
+
+          echo "$ROOT_OUTPUT" | grep -qw "style.css" || (echo "::error::Theme root style.css missing in ${THEME_PATH}"; exit 1)
+          echo "$ROOT_OUTPUT" | grep -qw "functions.php" || (echo "::error::functions.php missing in ${THEME_PATH}"; exit 1)
+          echo "$DIST_OUTPUT" | grep -qw "style.css" || (echo "::error::dist/style.css missing in ${THEME_PATH}/dist"; exit 1)
+          echo "Theme OK via SFTP: style.css, dist/style.css and functions.php found"
+
+      - name: Verify deployed CSS over HTTP
+        if: github.event_name == 'push'
+        run: |
+          CSS_URL="https://${{ secrets.HOSTINGER_DOMAIN }}/wp-content/themes/parisii-optique/dist/style.css?deploy=${GITHUB_SHA}"
+          echo "Checking CSS URL: $CSS_URL"
+          curl -fsSL --connect-timeout 10 --max-time 30 "$CSS_URL" -o /tmp/preprod-style.css
+          BYTES="$(wc -c < /tmp/preprod-style.css | tr -d ' ')"
+          echo "Downloaded CSS size: ${BYTES} bytes"
+          test "$BYTES" -gt 10000 || (echo "::error::CSS is missing or unexpectedly small at $CSS_URL"; exit 1)
 
       - name: Purge cache
         if: github.event_name == 'push' && vars.HOSTINGER_PURGE_ENABLED == 'true'
@@ -113,6 +221,6 @@ jobs:
           echo "Post-deploy check: $SITE_URL..."
           curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Site unreachable after deployment"; exit 1)
 
-      - name: Cleanup SSH
+      - name: Cleanup SFTP key
         if: always() && github.event_name == 'push'
         run: rm -f ~/.ssh/deploy_key

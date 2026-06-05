@@ -17,11 +17,15 @@
     "@tailwindcss/typography": "^0.5.10",
     "embla-carousel": "^8.6.0",
     "embla-carousel-autoplay": "^8.6.0",
-    "postcss": "^8.4.32"
+    "postcss": "^8.5.10"
   },
   "devDependencies": {
     "@wordpress/scripts": "^31.4.0",
     "autoprefixer": "^10.4.16",
     "baseline-browser-mapping": "^2.9.19"
+  },
+  "overrides": {
+    "picomatch": "^4.0.4",
+    "postcss": "^8.5.10"
   }
 }

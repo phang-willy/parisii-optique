@@ -15,6 +15,7 @@
         initAnimations();
         initDesktopMenu();
         adjustNavbar();
+        initNavbarAutoHide();
     });
 
     // Window resize
@@ -47,6 +48,118 @@
             $header.css('top', adminBarHeight + 'px');
             $main.css('padding-top', (headerHeight + adminBarHeight) + 'px');
         }
+    }
+
+    /**
+     * Keep the fixed navbar hidden while idle and visible while scrolling.
+     * Keyboard focus inside the navbar always shows it.
+     */
+    function initNavbarAutoHide() {
+        const $header = $('header#header');
+        const $window = $(window);
+        let scrollTimer = null;
+        let lastScrollTop = $window.scrollTop();
+        let lastScrollDirection = 'idle';
+        let isScrolling = false;
+        let ticking = false;
+
+        if (!$header.length) {
+            return;
+        }
+
+        function hasHeaderFocus() {
+            const activeElement = document.activeElement;
+            return !!activeElement && $header[0].contains(activeElement);
+        }
+
+        function isMobileMenuOpen() {
+            return $('#mobile-menu').hasClass('show');
+        }
+
+        function isAtPageEdge(scrollTop) {
+            const edgeThreshold = 4;
+            const currentScrollTop = typeof scrollTop === 'number' ? scrollTop : $window.scrollTop();
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            const documentHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight
+            );
+
+            return currentScrollTop <= edgeThreshold || currentScrollTop + viewportHeight >= documentHeight - edgeThreshold;
+        }
+
+        function showNavbar() {
+            $header.removeClass('navbar-is-hidden');
+        }
+
+        function hideNavbar() {
+            if (hasHeaderFocus() || isMobileMenuOpen() || isAtPageEdge()) {
+                showNavbar();
+                return;
+            }
+
+            $header.addClass('navbar-is-hidden');
+        }
+
+        function handleScroll() {
+            const currentScrollTop = $window.scrollTop();
+            const scrollDelta = Math.abs(currentScrollTop - lastScrollTop);
+
+            if (scrollDelta > 1) {
+                isScrolling = true;
+                lastScrollDirection = currentScrollTop < lastScrollTop ? 'up' : 'down';
+
+                if (lastScrollDirection === 'up' || isAtPageEdge(currentScrollTop)) {
+                    showNavbar();
+                } else {
+                    hideNavbar();
+                }
+            } else if (isAtPageEdge(currentScrollTop)) {
+                showNavbar();
+            }
+
+            lastScrollTop = currentScrollTop;
+            ticking = false;
+
+            clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(function() {
+                isScrolling = false;
+                if (lastScrollDirection === 'up') {
+                    showNavbar();
+                } else {
+                    hideNavbar();
+                }
+            }, 180);
+        }
+
+        if (isAtPageEdge()) {
+            showNavbar();
+        } else {
+            hideNavbar();
+        }
+
+        $window.on('scroll', function() {
+            if (!ticking) {
+                window.requestAnimationFrame(handleScroll);
+                ticking = true;
+            }
+        });
+
+        $window.on('resize', function() {
+            hideNavbar();
+        });
+
+        $header.on('focusin', function() {
+            showNavbar();
+        });
+
+        $header.on('focusout', function() {
+            setTimeout(function() {
+                if (!hasHeaderFocus() && !isScrolling) {
+                    hideNavbar();
+                }
+            }, 0);
+        });
     }
 
     /**

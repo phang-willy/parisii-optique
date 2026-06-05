@@ -4,24 +4,14 @@
     var form = document.getElementById('parisii-contact-form');
     if (!form) return;
 
+    var contactContent = document.getElementById('parisii-contact-content');
     var formWrapper = document.getElementById('parisii-contact-form-wrapper');
-    var successBlock = document.getElementById('parisii-contact-success');
-    var successMessageEl = document.getElementById('parisii-contact-success-message');
-    var refreshBtn = document.getElementById('parisii-contact-refresh-btn');
     var alertEl = document.getElementById('parisii-contact-alert');
     var submitBtn = document.getElementById('contact-submit');
-    var captchaCodeEl = document.getElementById('contact-captcha-code');
-    var captchaInput = document.getElementById('contact-captcha');
-    var captchaKeyInput = document.getElementById('contact-captcha-key');
-    var captchaRefreshBtn = document.getElementById('contact-captcha-refresh');
+    var startedAtInput = document.getElementById('contact-form-started-at');
     var config = window.parisii_contact_ajax || {};
     var errors = {};
     var touched = {};
-    var captchaKey = '';
-
-    function generateKey() {
-        return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2);
-    }
 
     function setError(field, message, forceShow) {
         errors[field] = message || '';
@@ -52,6 +42,53 @@
         if (alertEl) alertEl.classList.add('hidden');
     }
 
+    function createSuccessBlock(message) {
+        var existingSuccess = document.getElementById('parisii-contact-success');
+        if (existingSuccess) existingSuccess.remove();
+
+        var successBlock = document.createElement('div');
+        successBlock.id = 'parisii-contact-success';
+        successBlock.className = 'w-full max-w-2xl mx-auto my-8 bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 md:p-8 text-center';
+        successBlock.setAttribute('role', 'status');
+        successBlock.setAttribute('aria-live', 'polite');
+        successBlock.setAttribute('tabindex', '-1');
+
+        var successMessageEl = document.createElement('p');
+        successMessageEl.id = 'parisii-contact-success-message';
+        successMessageEl.className = 'mb-6 rounded-lg p-4 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-100 border border-green-300 dark:border-green-700';
+        successMessageEl.textContent = message;
+
+        var refreshBtn = document.createElement('button');
+        refreshBtn.type = 'button';
+        refreshBtn.id = 'parisii-contact-refresh-btn';
+        refreshBtn.className = 'px-6 py-3 rounded-lg bg-main hover:bg-main-hover focus:bg-main-focus text-white font-medium focus:ring-2 focus:ring-main focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors cursor-pointer';
+        refreshBtn.textContent = (config.strings && config.strings.refresh_page) || 'Rafraîchir la page';
+        refreshBtn.addEventListener('click', function () { window.location.reload(); });
+
+        successBlock.appendChild(successMessageEl);
+        successBlock.appendChild(refreshBtn);
+
+        var target = contactContent || formWrapper || form;
+        if (target && target.parentNode) {
+            target.parentNode.insertBefore(successBlock, target);
+        }
+
+        return successBlock;
+    }
+
+    function showSuccess(message) {
+        var successBlock = createSuccessBlock(message);
+
+        if (contactContent) {
+            contactContent.classList.add('hidden');
+        } else if (formWrapper) {
+            formWrapper.classList.add('hidden');
+        }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        successBlock.focus({ preventScroll: true });
+    }
+
     function validateEmail(value) {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value || '');
     }
@@ -67,13 +104,11 @@
                 if (!value) return (config.strings && config.strings.required_email) || 'L\'email est obligatoire.';
                 return validateEmail(value) ? '' : (config.strings && config.strings.invalid_email) || 'Email invalide.';
             case 'tel':
-                return value.length ? '' : (config.strings && config.strings.required_tel) || 'Le téléphone est obligatoire.';
+                return '';
             case 'sujet':
                 return value.length ? '' : (config.strings && config.strings.required_sujet) || 'Le sujet est obligatoire.';
             case 'message':
                 return value.length ? '' : (config.strings && config.strings.required_message) || 'Le message est obligatoire.';
-            case 'captcha':
-                return value.length ? '' : (config.strings && config.strings.required_captcha) || 'Veuillez recopier le code.';
             default:
                 return '';
         }
@@ -81,7 +116,7 @@
 
     function validateForm(forceShowErrors) {
         var hasError = false;
-        ['nom', 'prenom', 'email', 'tel', 'sujet', 'message', 'captcha'].forEach(function (name) {
+        ['nom', 'prenom', 'email', 'tel', 'sujet', 'message'].forEach(function (name) {
             var input = form.querySelector('[name="' + name + '"]');
             var val = input ? input.value : '';
             var msg = validateField(name, val);
@@ -104,36 +139,11 @@
         }
     }
 
-    function loadCaptcha() {
-        captchaKey = generateKey();
-        if (captchaKeyInput) captchaKeyInput.value = captchaKey;
-        if (!config.ajax_url || !config.nonce) {
-            if (captchaCodeEl) captchaCodeEl.textContent = '…';
-            return;
-        }
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', config.ajax_url, true);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.onload = function () {
-            var data;
-            try { data = JSON.parse(xhr.responseText); } catch (e) { data = {}; }
-            if (data.success && data.data && data.data.code) {
-                if (captchaCodeEl) captchaCodeEl.textContent = data.data.code;
-                if (captchaInput) captchaInput.value = '';
-                setError('captcha', '');
-            } else {
-                if (captchaCodeEl) captchaCodeEl.textContent = '?';
-            }
-            validateForm();
-        };
-        xhr.send('action=parisii_contact_captcha&nonce=' + encodeURIComponent(config.nonce) + '&key=' + encodeURIComponent(captchaKey));
-    }
-
     form.querySelectorAll('input, textarea').forEach(function (el) {
         el.addEventListener('blur', function () {
             var name = this.getAttribute('name');
             if (name) touched[name] = true;
-            if (name && name !== 'captcha') formatInput(this);
+            if (name) formatInput(this);
             setError(name, validateField(name, this.value));
             validateForm();
         });
@@ -143,9 +153,6 @@
             validateForm();
         });
     });
-
-    if (captchaRefreshBtn) captchaRefreshBtn.addEventListener('click', loadCaptcha);
-    if (refreshBtn) refreshBtn.addEventListener('click', function () { window.location.reload(); });
 
     form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -165,12 +172,7 @@
             var data;
             try { data = JSON.parse(xhr.responseText); } catch (err) { data = {}; }
             if (data.success && data.data && data.data.message) {
-                if (formWrapper) formWrapper.classList.add('hidden');
-                if (successBlock) {
-                    if (successMessageEl) successMessageEl.textContent = data.data.message;
-                    successBlock.classList.remove('hidden');
-                }
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showSuccess(data.data.message);
             } else {
                 if (data.data && data.data.errors) {
                     Object.keys(data.data.errors).forEach(function (field) {
@@ -179,7 +181,6 @@
                     });
                 }
                 showAlert('error', (data.data && data.data.message) || 'Une erreur est survenue. Veuillez réessayer.');
-                loadCaptcha();
             }
             submitBtn.disabled = !validateForm();
         };
@@ -190,6 +191,6 @@
         xhr.send(formData);
     });
 
-    loadCaptcha();
+    if (startedAtInput) startedAtInput.value = Math.floor(Date.now() / 1000).toString();
     validateForm();
 })();

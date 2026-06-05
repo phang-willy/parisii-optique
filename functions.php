@@ -10,6 +10,50 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+/**
+ * Detect HTTPS requests forwarded by a proxy/CDN when WordPress does not see
+ * the request as SSL locally.
+ */
+function parisii_optique_is_forwarded_https_request() {
+    if (is_ssl()) {
+        return true;
+    }
+
+    $forwarded_proto = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_X_FORWARDED_PROTO'])) : '';
+    if ($forwarded_proto) {
+        $protocols = array_map('trim', explode(',', strtolower($forwarded_proto)));
+        if (in_array('https', $protocols, true)) {
+            return true;
+        }
+    }
+
+    $forwarded_ssl = isset($_SERVER['HTTP_X_FORWARDED_SSL']) ? strtolower(sanitize_text_field(wp_unslash($_SERVER['HTTP_X_FORWARDED_SSL']))) : '';
+    if ($forwarded_ssl === 'on' || $forwarded_ssl === '1') {
+        return true;
+    }
+
+    $cf_visitor = isset($_SERVER['HTTP_CF_VISITOR']) ? wp_unslash($_SERVER['HTTP_CF_VISITOR']) : '';
+    if (is_string($cf_visitor) && strpos(strtolower($cf_visitor), '"scheme":"https"') !== false) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * WordPress can output the site icon with the http upload URL in wp-admin when
+ * SSL is terminated before PHP. Force the favicon URL to HTTPS for HTTPS admin
+ * requests to avoid mixed-content blocking.
+ */
+function parisii_optique_force_https_admin_site_icon($url) {
+    if (is_admin() && $url && parisii_optique_is_forwarded_https_request()) {
+        return set_url_scheme($url, 'https');
+    }
+
+    return $url;
+}
+add_filter('get_site_icon_url', 'parisii_optique_force_https_admin_site_icon');
+
 // Theme setup
 function parisii_optique_setup() {
     // Add theme support
@@ -274,6 +318,8 @@ add_action('after_setup_theme', 'parisii_optique_remove_default_patterns');
 function parisii_optique_scripts() {
     $tailwind_css_path = get_template_directory() . '/dist/style.css';
     $tailwind_css_version = file_exists($tailwind_css_path) ? (string) filemtime($tailwind_css_path) : wp_get_theme()->get('Version');
+    $theme_js_path = get_template_directory() . '/js/theme.js';
+    $theme_js_version = file_exists($theme_js_path) ? (string) filemtime($theme_js_path) : wp_get_theme()->get('Version');
 
     // Enqueue Tailwind CSS
     wp_enqueue_style('tailwind-css', get_template_directory_uri() . '/dist/style.css', [], $tailwind_css_version);
@@ -282,7 +328,7 @@ function parisii_optique_scripts() {
     wp_enqueue_style('parisii-optique-style', get_stylesheet_uri(), ['tailwind-css'], wp_get_theme()->get('Version'));
     
     // Enqueue theme script
-    wp_enqueue_script('parisii-optique-script', get_template_directory_uri() . '/js/theme.js', ['jquery'], '1.0.0', true);
+    wp_enqueue_script('parisii-optique-script', get_template_directory_uri() . '/js/theme.js', ['jquery'], $theme_js_version, true);
     
     // Localize script for AJAX
     wp_localize_script('parisii-optique-script', 'parisii_ajax', [
@@ -297,11 +343,15 @@ function parisii_optique_contact_form_scripts() {
     if (!is_page('nous-contacter')) {
         return;
     }
+
+    $contact_form_js_path = get_template_directory() . '/js/contact-form.js';
+    $contact_form_js_version = file_exists($contact_form_js_path) ? (string) filemtime($contact_form_js_path) : wp_get_theme()->get('Version');
+
     wp_enqueue_script(
         'parisii-contact-form',
         get_template_directory_uri() . '/js/contact-form.js',
         array(),
-        '1.0.0',
+        $contact_form_js_version,
         true
     );
     wp_localize_script('parisii-contact-form', 'parisii_contact_ajax', array(
@@ -312,10 +362,9 @@ function parisii_optique_contact_form_scripts() {
             'required_prenom'  => __('Le prénom est obligatoire.', 'parisii-optique'),
             'required_email'   => __('L\'email est obligatoire.', 'parisii-optique'),
             'invalid_email'    => __('Email invalide.', 'parisii-optique'),
-            'required_tel'     => __('Le téléphone est obligatoire.', 'parisii-optique'),
             'required_sujet'   => __('Le sujet est obligatoire.', 'parisii-optique'),
             'required_message' => __('Le message est obligatoire.', 'parisii-optique'),
-            'required_captcha' => __('Veuillez recopier le code.', 'parisii-optique'),
+            'refresh_page'     => __('Rafraîchir la page', 'parisii-optique'),
         ),
     ));
 }
@@ -815,13 +864,15 @@ function parisii_optique_add_external_link_icon($content) {
     $site_url = home_url();
     $site_domain = parse_url($site_url, PHP_URL_HOST);
     
-    // Pattern pour trouver les liens <a href="...">
-    $pattern = '/<a\s+([^>]*?)href=["\']([^"\']*?)["\']([^>]*?)>/i';
+    // Pattern pour trouver les liens complets afin de ne pas imbriquer de balises <a>.
+    $pattern = '/<a\b([^>]*)href=(["\'])([^"\']+)\2([^>]*)>(.*?)<\/a>/is';
     
     $content = preg_replace_callback($pattern, function($matches) use ($site_domain) {
         $before_href = $matches[1];
-        $url = $matches[2];
-        $after_href = $matches[3];
+        $quote = $matches[2];
+        $url = $matches[3];
+        $after_href = $matches[4];
+        $link_content = $matches[5];
         
         // Vérifier si c'est un lien externe
         $is_external = false;
@@ -839,8 +890,8 @@ function parisii_optique_add_external_link_icon($content) {
             // Vérifier si l'icône n'est pas déjà présente
             if (strpos($matches[0], 'external-link') === false) {
                 $external_icon = '<svg class="ml-1 w-3 h-3 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>';
-                return '<a ' . $before_href . 'href="' . $url . '"' . $after_href . '><span class="inline-flex items-center">' . 
-                       strip_tags($matches[0], '<a>') . 
+                return '<a' . $before_href . 'href=' . $quote . $url . $quote . $after_href . '><span class="inline-flex items-center external-link">' .
+                       $link_content .
                        $external_icon . '</span></a>';
             }
         }

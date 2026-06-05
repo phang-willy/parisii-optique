@@ -217,13 +217,11 @@
         const currentTheme = getTheme();
         applyTheme(currentTheme);
         updateUI();
-        console.log('Theme synchronized:', currentTheme, '->', document.documentElement.className, 'data-theme:', document.documentElement.getAttribute('data-theme'));
     }
     
     // Force CSS refresh for light mode
     function forceLightMode() {
         setTheme('light');
-        console.log('Forced light mode');
     }
     
     // Expose API globally

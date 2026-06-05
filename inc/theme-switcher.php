@@ -44,7 +44,6 @@ function parisii_optique_theme_switcher_script() {
             // Theme switcher click handler
             if (themeSwitcher) {
                 themeSwitcher.addEventListener('click', function() {
-                    console.log('themeSwitcher clicked');
                     const isDark = html.classList.contains('dark');
                     const newTheme = isDark ? 'light' : 'dark';
                     

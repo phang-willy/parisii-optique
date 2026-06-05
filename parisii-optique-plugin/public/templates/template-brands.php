@@ -34,7 +34,7 @@ get_header();
             <?php the_content(); ?>
         <?php endif; ?>
     <?php endwhile; ?>
-    <section class="max-w-7xl p-4 md:p-6 lg:p-8 mx-auto">
+    <section id="marques" class="max-w-7xl p-4 md:p-6 lg:p-8 mx-auto parisii-optique-brands-content">
         <?php Parisii_Optique_Brand_Display::render_brands_grid(); ?>
     </section>
 <?php
