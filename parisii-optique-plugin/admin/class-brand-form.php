@@ -82,15 +82,6 @@ class Parisii_Optique_Brand_Form {
             </form>
         </div>
         <?php
-        
-        if (isset($_POST['confirm_delete'])) {
-            check_admin_referer('parisii_optique_confirm_delete', 'parisii_optique_delete_nonce');
-            
-            Parisii_Optique_Brand::delete($brand_id);
-            
-            wp_redirect(add_query_arg(array('page' => 'parisii-optique-brands', 'tab' => 'list', 'deleted' => '1'), admin_url('admin.php')));
-            exit;
-        }
     }
     
     /**

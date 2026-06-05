@@ -55,6 +55,7 @@ add_action('plugins_loaded', 'parisii_optique_plugin_load_textdomain');
  */
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'includes/class-database.php';
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'includes/class-brand.php';
+require_once PARISII_OPTIQUE_PLUGIN_PATH . 'admin/components/class-update-plugin-button.php';
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'admin/class-admin-menu.php';
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'admin/class-brand-list.php';
 require_once PARISII_OPTIQUE_PLUGIN_PATH . 'admin/class-brand-form.php';

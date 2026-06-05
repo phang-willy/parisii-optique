@@ -6,11 +6,16 @@
  */
 ?>
 
-<header id="header" class="navbar left-0 z-50 border-b border-gray-200 overflow-visible top-0 fixed will-change-transform w-full bg-white/80 dark:bg-black/80 dark:border-gray-800 backdrop-blur-md">
+<header id="header" class="navbar left-0 top-0 z-50 border-b fixed w-full border-gray-200 bg-white dark:border-gray-700 dark:bg-black">
     <a class="skip-link screen-reader-text" href="#main"><?php esc_html_e('Aller au contenu', 'parisii-optique'); ?></a>
     <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        <div class="flex items-center py-2">
+            <a href="" class="text-base lg:text-2xl font-heading font-bold text-gray-900 dark:text-white text-center mx-auto">
+                <h1><?php echo esc_html(get_bloginfo('name')); ?></h1>
+            </a>
+        </div>
         <div class="flex items-center justify-between">
-            <div class="flex-shrink-0">
+            <div class="shrink-0">
                 <?php if (has_custom_logo()) : ?>
                     <div class="w-16 lg:w-32">
                         <?php the_custom_logo(); ?>
@@ -51,7 +56,7 @@
     
     <nav id="mobile-menu" class="fixed top-0 right-0 bottom-0 h-screen bg-white dark:bg-gray-900 z-50 md:hidden overflow-y-auto" role="navigation" aria-label="<?php esc_attr_e('Menu principal mobile', 'parisii-optique'); ?>" aria-hidden="true" inert>
         <div class="container flex flex-col h-full">
-            <div class="flex items-center justify-between py-3 px-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0 h-16">
+            <div class="flex items-center justify-between py-3 px-4 border-b border-gray-200 dark:border-gray-700 shrink-0 h-16">
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white"><?php _e('Menu', 'parisii-optique'); ?></h2>
                 <button id="mobile-menu-close" class="cursor-pointer p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" aria-label="<?php esc_attr_e('Fermer le menu', 'parisii-optique'); ?>">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

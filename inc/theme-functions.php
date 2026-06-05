@@ -63,9 +63,9 @@ class Parisii_Optique_Walker_Nav_Menu extends Walker_Nav_Menu {
         $is_active = ($is_current || $is_current_parent);
         $active_wrapper = $is_active ? ' bg-main text-white' : '';
         if ($has_children && $depth === 0) {
-            $output .= '<div class="flex items-center gap-8 menu-container pl-4 bg-main bg-secondary hover:text-white transition-colors duration-200' . $active_wrapper . '">';
+            $output .= '<div class="flex items-center gap-8 menu-container pl-4 bg-main hover:text-white transition-colors duration-200' . $active_wrapper . '">';
         } elseif ($has_children && $depth > 0) {
-            $output .= '<div class="flex items-center justify-between w-full group bg-main bg-secondary hover:text-white transition-colors duration-200' . $active_wrapper . '">';
+            $output .= '<div class="flex items-center justify-between w-full group bg-main hover:text-white transition-colors duration-200' . $active_wrapper . '">';
         }
         
         $attributes = ! empty($item->attr_title) ? ' title="'  . esc_attr($item->attr_title) .'"' : '';
@@ -79,11 +79,11 @@ class Parisii_Optique_Walker_Nav_Menu extends Walker_Nav_Menu {
             if ($has_children) {
                 // Pour les parents niveau 0 : pas de bg, juste le texte
                 $text_color = $is_active ? 'text-white' : 'text-gray-700 dark:text-gray-300';
-                $link_classes = 'nav-link block ' . $text_color . ' text-sm font-medium transition-colors duration-200';
+                $link_classes = 'nav-link block ' . $text_color . ' text-sm font-medium transition-colors duration-200 lg:text-lg';
             } else {
                 // Pour les items sans enfants niveau 0 : bg et hover complets
                 $active_link_class = $is_active ? 'bg-main text-white' : 'text-gray-700 dark:text-gray-300';
-                $link_classes = 'nav-link block ' . $active_link_class . ' hover:bg-main hover:text-white py-3.5 text-sm font-medium px-6 transition-colors duration-200';
+                $link_classes = 'nav-link block ' . $active_link_class . ' hover:bg-main hover:text-white py-3.5 text-sm font-medium px-6 transition-colors duration-200 lg:text-lg';
             }
         } else {
             // Même style pour tous les sous-niveaux (enfants et enfants d'enfants)
@@ -241,10 +241,10 @@ class Parisii_Optique_Walker_Nav_Menu_Mobile extends Walker_Nav_Menu {
             $toggle_class = ($is_current || $is_current_parent) ? 'text-white' : 'text-gray-700 dark:text-gray-300';
             
             if ($depth === 0) {
-                $item_output .= '<button type="button" class="submenu-toggle p-4 ' . $toggle_class . ' hover:text-white bg-secondary bg-secondary transition-all duration-200" aria-expanded="' . $aria_expanded . '" aria-label="' . esc_attr__('Ouvrir le sous-menu', 'parisii-optique') . '">';
+                $item_output .= '<button type="button" class="submenu-toggle p-4 ' . $toggle_class . ' hover:text-white bg-secondary transition-all duration-200" aria-expanded="' . $aria_expanded . '" aria-label="' . esc_attr__('Ouvrir le sous-menu', 'parisii-optique') . '">';
             } else {
                 // Même style pour tous les sous-niveaux
-                $item_output .= '<button type="button" class="submenu-toggle p-4 ' . $toggle_class . ' hover:text-white bg-secondary bg-secondary transition-all duration-200" aria-expanded="false" aria-label="' . esc_attr__('Ouvrir le sous-menu', 'parisii-optique') . '">';
+                $item_output .= '<button type="button" class="submenu-toggle p-4 ' . $toggle_class . ' hover:text-white bg-secondary transition-all duration-200" aria-expanded="false" aria-label="' . esc_attr__('Ouvrir le sous-menu', 'parisii-optique') . '">';
             }
             
             $item_output .= '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down transition-transform duration-200"><path d="m6 9 6 6 6-6"/></svg>';
@@ -317,6 +317,47 @@ class Parisii_Optique_Walker_Nav_Menu_Footer extends Walker_Nav_Menu {
 /**
  * Add customizer settings for footer
  */
+function parisii_optique_sanitize_instagram_account($account) {
+    $account = sanitize_text_field($account);
+    $account = preg_replace('#^https?://(www\.)?instagram\.com/#i', '', $account);
+    $account = trim($account, " \t\n\r\0\x0B/@");
+    $account = preg_replace('/[^A-Za-z0-9._]/', '', $account);
+
+    return $account ?: 'parisii.optique';
+}
+
+function parisii_optique_sanitize_facebook_account($account) {
+    $account = sanitize_text_field($account);
+
+    return $account ?: 'Parisii Optique';
+}
+
+function parisii_optique_sanitize_facebook_url($url) {
+    $url = esc_url_raw($url);
+    $host = $url ? wp_parse_url($url, PHP_URL_HOST) : '';
+
+    if (!$host || !preg_match('/(^|\.)facebook\.com$/i', $host)) {
+        return 'https://www.facebook.com/profile.php?id=61574336251763';
+    }
+
+    return $url;
+}
+
+function parisii_optique_sanitize_google_maps_embed($html) {
+    return wp_kses($html, [
+        'iframe' => [
+            'src' => true,
+            'width' => true,
+            'height' => true,
+            'style' => true,
+            'allowfullscreen' => true,
+            'loading' => true,
+            'referrerpolicy' => true,
+            'title' => true,
+        ],
+    ]);
+}
+
 function parisii_optique_customize_register_footer($wp_customize) {
     // Footer Section
     $wp_customize->add_section('footer_section', [
@@ -358,10 +399,43 @@ function parisii_optique_customize_register_footer($wp_customize) {
         'section' => 'footer_section',
         'type' => 'email',
     ]);
+
+    $wp_customize->add_setting('instagram_account', [
+        'default' => 'parisii.optique',
+        'sanitize_callback' => 'parisii_optique_sanitize_instagram_account',
+    ]);
+
+    $wp_customize->add_control('instagram_account', [
+        'label' => __('Compte Instagram', 'parisii-optique'),
+        'section' => 'footer_section',
+        'type' => 'text',
+    ]);
+
+    $wp_customize->add_setting('facebook_account', [
+        'default' => 'Parisii Optique',
+        'sanitize_callback' => 'parisii_optique_sanitize_facebook_account',
+    ]);
+
+    $wp_customize->add_control('facebook_account', [
+        'label' => __('Compte Facebook', 'parisii-optique'),
+        'section' => 'footer_section',
+        'type' => 'text',
+    ]);
+
+    $wp_customize->add_setting('facebook_url', [
+        'default' => 'https://www.facebook.com/profile.php?id=61574336251763',
+        'sanitize_callback' => 'parisii_optique_sanitize_facebook_url',
+    ]);
+
+    $wp_customize->add_control('facebook_url', [
+        'label' => __('URL Facebook', 'parisii-optique'),
+        'section' => 'footer_section',
+        'type' => 'url',
+    ]);
     
     // Address
     $wp_customize->add_setting('address_street', [
-        'default' => '100 route de Seine',
+        'default' => '12 Véloroute Sequana',
         'sanitize_callback' => 'sanitize_text_field',
     ]);
     
@@ -380,6 +454,18 @@ function parisii_optique_customize_register_footer($wp_customize) {
         'label' => __('Adresse (ville)', 'parisii-optique'),
         'section' => 'footer_section',
         'type' => 'text',
+    ]);
+
+    $wp_customize->add_setting('google_maps_embed', [
+        'default' => '',
+        'sanitize_callback' => 'parisii_optique_sanitize_google_maps_embed',
+    ]);
+
+    $wp_customize->add_control('google_maps_embed', [
+        'label' => __('Iframe Google Maps', 'parisii-optique'),
+        'description' => __('Collez ici le code iframe fourni par Google Maps.', 'parisii-optique'),
+        'section' => 'footer_section',
+        'type' => 'textarea',
     ]);
     
     // Hours

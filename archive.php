@@ -62,7 +62,7 @@ get_header(); ?>
                                 <?php endif; ?>
                             </div>
                             
-                            <h2 class="text-xl font-heading font-semibold text-gray-900 dark:text-white mb-3 bg-secondary bg-main transition-colors">
+                            <h2 class="text-xl font-heading font-semibold text-gray-900 dark:text-white mb-3 bg-secondary  transition-colors">
                                 <a href="<?php the_permalink(); ?>">
                                     <?php the_title(); ?>
                                 </a>
@@ -72,7 +72,7 @@ get_header(); ?>
                                 <?php the_excerpt(); ?>
                             </div>
                             
-                            <a href="<?php the_permalink(); ?>" class="inline-flex items-center bg-secondary bg-main bg-secondary bg-secondary font-medium transition-colors">
+                            <a href="<?php the_permalink(); ?>" class="inline-flex items-center bg-main font-medium transition-colors">
                                 Lire la suite
                                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -84,7 +84,7 @@ get_header(); ?>
             </div>
             
             <?php
-            // Pagination
+            // Paginationbg-main
             the_posts_pagination([
                 'mid_size' => 2,
                 'prev_text' => '← Précédent',

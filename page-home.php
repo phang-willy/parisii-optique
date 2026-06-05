@@ -59,7 +59,7 @@ get_header();
             <article class="text-black">
                 <h3>Adresse</h3>
                 <a href="https://maps.app.goo.gl/mndu7PdqxZ4xdYTh8" class="external-link">
-                    <span class="text-sm"><?= get_theme_mod('address_street', '100 route de Seine') . '<br>' . get_theme_mod('address_city', '95249 Cormeilles-en-Parisis'); ?></span>
+                    <span class="text-sm"><?= get_theme_mod('address_street', '12 Véloroute Sequana') . '<br>' . get_theme_mod('address_city', '95240 Cormeilles-en-Parisis'); ?></span>
                 </a>
             </article>
             <article class="text-black">
