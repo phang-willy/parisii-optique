@@ -73,15 +73,17 @@ class Parisii_Optique_Admin_Menu {
         <div class="wrap">
             <h1><?php _e('Parisii Optique', 'parisii-optique-plugin'); ?></h1>
             
-            <?php
-            Parisii_Optique_Update_Plugin_Button::render(
-                array(
-                    'label' => __('Mise à jour du plugin', 'parisii-optique-plugin'),
-                )
-            );
-            ?>
-            
-            <p><?php _e('Bienvenue dans le panneau de gestion Parisii Optique.', 'parisii-optique-plugin'); ?></p>
+            <div class="parisii-dashboard-intro">
+                <p><?php _e('Bienvenue dans le panneau de gestion Parisii Optique.', 'parisii-optique-plugin'); ?></p>
+
+                <?php
+                    Parisii_Optique_Update_Plugin_Button::render(
+                        array(
+                            'label' => __('Mise à jour du plugin', 'parisii-optique-plugin'),
+                        )
+                    );
+                ?>
+            </div>
             
             <div class="parisii-dashboard-cards">
                 <div class="parisii-dashboard-card">
