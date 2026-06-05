@@ -16,6 +16,10 @@ class Parisii_Optique_Brand_List {
      * Handle actions
      */
     private function handle_actions() {
+        if (isset($_GET['deleted']) && absint($_GET['deleted']) === 1) {
+            echo '<div class="notice notice-success is-dismissible"><p>' . __('Marque supprimée avec succès.', 'parisii-optique-plugin') . '</p></div>';
+        }
+
         // Handle bulk delete
         if (isset($_POST['action']) && $_POST['action'] === 'bulk_delete') {
             check_admin_referer('parisii_optique_bulk_action');
@@ -132,7 +136,13 @@ class Parisii_Optique_Brand_List {
                         <?php foreach ($brands as $brand) : ?>
                             <?php
                             $edit_url = add_query_arg(array('tab' => 'edit', 'id' => $brand->id), admin_url('admin.php?page=parisii-optique-brands'));
-                            $delete_url = wp_nonce_url(add_query_arg(array('tab' => 'delete', 'id' => $brand->id)), 'parisii_optique_delete_' . $brand->id);
+                            $delete_url = wp_nonce_url(
+                                add_query_arg(
+                                    array('tab' => 'delete', 'id' => $brand->id),
+                                    admin_url('admin.php?page=parisii-optique-brands')
+                                ),
+                                'parisii_optique_delete_' . $brand->id
+                            );
                             ?>
                             <tr>
                                 <th scope="row" class="check-column">
@@ -147,7 +157,7 @@ class Parisii_Optique_Brand_List {
                                             <a href="<?php echo esc_url($edit_url); ?>"><?php _e('Modifier', 'parisii-optique-plugin'); ?></a> |
                                         </span>
                                         <span class="delete">
-                                            <a href="<?php echo esc_url($delete_url); ?>" onclick="return confirm('<?php esc_attr_e('Êtes-vous sûr de vouloir supprimer cette marque ?', 'parisii-optique-plugin'); ?>');"><?php _e('Supprimer', 'parisii-optique-plugin'); ?></a>
+                                            <a href="<?php echo esc_url($delete_url); ?>"><?php _e('Supprimer', 'parisii-optique-plugin'); ?></a>
                                         </span>
                                     </div>
                                 </td>

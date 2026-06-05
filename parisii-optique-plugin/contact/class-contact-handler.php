@@ -11,38 +11,15 @@ if (!defined('ABSPATH')) {
 
 class Parisii_Optique_Contact_Handler {
 
-    const TRANSIENT_CAPTCHA = 'parisii_contact_captcha_';
-    const CAPTCHA_LENGTH = 8;
+    const HONEYPOT_FIELD = 'website';
+    const MIN_SUBMIT_SECONDS = 3;
+    const MAX_SUBMIT_SECONDS = 3600;
+    const RATE_LIMIT_MAX = 10;
+    const RATE_LIMIT_SECONDS = 3600;
 
     public function __construct() {
         add_action('wp_ajax_parisii_contact_submit', array($this, 'handle_submit'));
         add_action('wp_ajax_nopriv_parisii_contact_submit', array($this, 'handle_submit'));
-        add_action('wp_ajax_parisii_contact_captcha', array($this, 'get_captcha'));
-        add_action('wp_ajax_nopriv_parisii_contact_captcha', array($this, 'get_captcha'));
-    }
-
-    /**
-     * Generate random captcha (a-Z, 0-9, specials)
-     */
-    public static function generate_captcha() {
-        $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*';
-        $len = strlen($chars);
-        $code = '';
-        for ($i = 0; $i < self::CAPTCHA_LENGTH; $i++) {
-            $code .= $chars[wp_rand(0, $len - 1)];
-        }
-        return $code;
-    }
-
-    public function get_captcha() {
-        check_ajax_referer('parisii_contact_nonce', 'nonce');
-        $code = self::generate_captcha();
-        $key = isset($_POST['key']) ? sanitize_text_field($_POST['key']) : '';
-        if (!$key) {
-            wp_send_json_error(array('message' => __('Clé captcha manquante.', 'parisii-optique-plugin')));
-        }
-        set_transient(self::TRANSIENT_CAPTCHA . $key, $code, 600); // 10 min
-        wp_send_json_success(array('code' => $code));
     }
 
     /** Max lengths matching DB schema (varchar 255, 50; message text). */
@@ -57,14 +34,34 @@ class Parisii_Optique_Contact_Handler {
         check_ajax_referer('parisii_contact_nonce', 'nonce');
         
         $errors = array();
-        $nom = isset($_POST['nom']) ? trim(sanitize_text_field($_POST['nom'])) : '';
-        $prenom = isset($_POST['prenom']) ? trim(sanitize_text_field($_POST['prenom'])) : '';
-        $email = isset($_POST['email']) ? trim(sanitize_email($_POST['email'])) : '';
-        $tel = isset($_POST['tel']) ? trim(sanitize_text_field($_POST['tel'])) : '';
-        $sujet = isset($_POST['sujet']) ? trim(sanitize_text_field($_POST['sujet'])) : '';
-        $message = isset($_POST['message']) ? trim(sanitize_textarea_field($_POST['message'])) : '';
-        $captcha_input = isset($_POST['captcha']) ? sanitize_text_field($_POST['captcha']) : '';
-        $captcha_key = isset($_POST['captcha_key']) ? sanitize_text_field($_POST['captcha_key']) : '';
+        $nom = isset($_POST['nom']) ? trim(sanitize_text_field(wp_unslash($_POST['nom']))) : '';
+        $prenom = isset($_POST['prenom']) ? trim(sanitize_text_field(wp_unslash($_POST['prenom']))) : '';
+        $email = isset($_POST['email']) ? trim(sanitize_email(wp_unslash($_POST['email']))) : '';
+        $tel = isset($_POST['tel']) ? trim(sanitize_text_field(wp_unslash($_POST['tel']))) : '';
+        $sujet = isset($_POST['sujet']) ? trim(sanitize_text_field(wp_unslash($_POST['sujet']))) : '';
+        $message = isset($_POST['message']) ? trim(sanitize_textarea_field(wp_unslash($_POST['message']))) : '';
+        $honeypot = isset($_POST[self::HONEYPOT_FIELD]) ? trim(sanitize_text_field(wp_unslash($_POST[self::HONEYPOT_FIELD]))) : '';
+        $form_started_at = isset($_POST['form_started_at']) ? absint($_POST['form_started_at']) : 0;
+
+        if ($honeypot !== '') {
+            wp_send_json_success(array(
+                'message' => __('Votre message a bien été envoyé. Nous vous recontacterons rapidement.', 'parisii-optique-plugin'),
+                'mail_sent' => false,
+            ));
+        }
+
+        $elapsed = $form_started_at > 0 ? time() - $form_started_at : 0;
+        if ($elapsed < self::MIN_SUBMIT_SECONDS || $elapsed > self::MAX_SUBMIT_SECONDS) {
+            $errors['form'] = __('Veuillez réessayer dans quelques secondes.', 'parisii-optique-plugin');
+        }
+
+        $rate_key = 'parisii_contact_rate_' . md5($this->get_client_ip());
+        $rate_count = (int) get_transient($rate_key);
+        if ($rate_count >= self::RATE_LIMIT_MAX) {
+            $errors['form'] = __('Trop de tentatives. Veuillez réessayer plus tard.', 'parisii-optique-plugin');
+        } else {
+            set_transient($rate_key, $rate_count + 1, self::RATE_LIMIT_SECONDS);
+        }
 
         if (strlen($nom) < 1) {
             $errors['nom'] = __('Le nom est obligatoire.', 'parisii-optique-plugin');
@@ -81,9 +78,7 @@ class Parisii_Optique_Contact_Handler {
         } elseif (strlen($email) > self::MAX_EMAIL) {
             $errors['email'] = sprintf(__('L\'email ne doit pas dépasser %d caractères.', 'parisii-optique-plugin'), self::MAX_EMAIL);
         }
-        if (strlen($tel) < 1) {
-            $errors['tel'] = __('Le téléphone est obligatoire.', 'parisii-optique-plugin');
-        } elseif (mb_strlen($tel) > self::MAX_TEL) {
+        if ($tel !== '' && mb_strlen($tel) > self::MAX_TEL) {
             $errors['tel'] = sprintf(__('Le téléphone ne doit pas dépasser %d caractères.', 'parisii-optique-plugin'), self::MAX_TEL);
         }
         if (strlen($sujet) < 1) {
@@ -96,18 +91,11 @@ class Parisii_Optique_Contact_Handler {
         } elseif (mb_strlen($message) > self::MAX_MESSAGE) {
             $errors['message'] = sprintf(__('Le message ne doit pas dépasser %d caractères.', 'parisii-optique-plugin'), self::MAX_MESSAGE);
         }
-        $stored = $captcha_key ? get_transient(self::TRANSIENT_CAPTCHA . $captcha_key) : false;
-        if (!$captcha_key || $stored === false) {
-            $errors['captcha'] = __('Code de vérification expiré ou invalide.', 'parisii-optique-plugin');
-        } elseif (strcmp((string) $stored, (string) $captcha_input) !== 0) {
-            $errors['captcha'] = __('Le code saisi est incorrect.', 'parisii-optique-plugin');
-        }
-        if ($captcha_key) {
-            delete_transient(self::TRANSIENT_CAPTCHA . $captcha_key);
-        }
-
         if (!empty($errors)) {
-            wp_send_json_error(array('errors' => $errors));
+            wp_send_json_error(array(
+                'errors' => $errors,
+                'message' => __('Veuillez corriger les champs indiqués.', 'parisii-optique-plugin'),
+            ));
         }
 
         $nom = strtoupper($nom);
@@ -166,6 +154,10 @@ class Parisii_Optique_Contact_Handler {
             'Reply-To: ' . $email,
         );
         return wp_mail($to, $subject, $body_html, $headers);
+    }
+
+    private function get_client_ip() {
+        return isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
     }
 
     /**

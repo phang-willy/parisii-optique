@@ -15,6 +15,7 @@ class Parisii_Optique_Admin_Menu {
     public function __construct() {
         add_action('admin_menu', array($this, 'add_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        add_action('admin_init', array($this, 'handle_brand_delete_confirmation'));
         add_action('admin_init', array($this, 'handle_plugin_update'));
     }
     
@@ -72,19 +73,17 @@ class Parisii_Optique_Admin_Menu {
         <div class="wrap">
             <h1><?php _e('Parisii Optique', 'parisii-optique-plugin'); ?></h1>
             
-            <!-- Update Button -->
-            <div class="alignright">
-                <form method="post">
-                    <?php wp_nonce_field('parisii_optique_update_plugin', 'parisii_optique_update_nonce'); ?>
-                    <input type="hidden" name="action" value="update_plugin">
-                    <button type="submit" class="button button-secondary" onclick="return confirm('<?php esc_attr_e('Êtes-vous sûr de vouloir mettre à jour le plugin depuis le thème ?', 'parisii-optique-plugin'); ?>');">
-                        <span class="dashicons dashicons-update" style="vertical-align: middle; margin-right: 5px;"></span>
-                        <?php _e('Mise à jour du plugin', 'parisii-optique-plugin'); ?>
-                    </button>
-                </form>
+            <div class="parisii-dashboard-intro">
+                <p><?php _e('Bienvenue dans le panneau de gestion Parisii Optique.', 'parisii-optique-plugin'); ?></p>
+
+                <?php
+                    Parisii_Optique_Update_Plugin_Button::render(
+                        array(
+                            'label' => __('Mise à jour du plugin', 'parisii-optique-plugin'),
+                        )
+                    );
+                ?>
             </div>
-            
-            <p><?php _e('Bienvenue dans le panneau de gestion Parisii Optique.', 'parisii-optique-plugin'); ?></p>
             
             <div class="parisii-dashboard-cards">
                 <div class="parisii-dashboard-card">
@@ -136,17 +135,7 @@ class Parisii_Optique_Admin_Menu {
             <div class="wp-header-end"></div>
             <h1 class="wp-heading-inline"><?php _e('Marques', 'parisii-optique-plugin'); ?></h1>
             
-            <!-- Update Button -->
-            <div class="alignright">
-                <form method="post" style="display: inline-block;">
-                    <?php wp_nonce_field('parisii_optique_update_plugin', 'parisii_optique_update_nonce'); ?>
-                    <input type="hidden" name="action" value="update_plugin">
-                    <button type="submit" class="button button-secondary" onclick="return confirm('<?php esc_attr_e('Êtes-vous sûr de vouloir mettre à jour le plugin depuis le thème ?', 'parisii-optique-plugin'); ?>');">
-                        <span class="dashicons dashicons-update" style="vertical-align: middle; margin-right: 5px;"></span>
-                        <?php _e('Mise à jour', 'parisii-optique-plugin'); ?>
-                    </button>
-                </form>
-            </div>
+            <?php Parisii_Optique_Update_Plugin_Button::render(); ?>
             
             <!-- Tab Navigation -->
             <nav class="nav-tab-wrapper wp-clearfix">
@@ -228,7 +217,37 @@ class Parisii_Optique_Admin_Menu {
             echo '<div class="notice notice-error"><p>' . __('ID de marque manquant.', 'parisii-optique-plugin') . '</p></div>';
         }
     }
-    
+
+    /**
+     * Handle brand delete confirmation before the admin page starts rendering.
+     */
+    public function handle_brand_delete_confirmation() {
+        if (
+            !isset($_POST['confirm_delete'], $_GET['page'], $_GET['tab'], $_GET['id']) ||
+            $_GET['page'] !== 'parisii-optique-brands' ||
+            $_GET['tab'] !== 'delete'
+        ) {
+            return;
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Vous n\'avez pas les permissions nécessaires.', 'parisii-optique-plugin'));
+        }
+
+        $brand_id = absint($_GET['id']);
+        if (!$brand_id) {
+            return;
+        }
+
+        check_admin_referer('parisii_optique_delete_' . $brand_id);
+        check_admin_referer('parisii_optique_confirm_delete', 'parisii_optique_delete_nonce');
+
+        Parisii_Optique_Brand::delete($brand_id);
+
+        wp_safe_redirect(add_query_arg(array('page' => 'parisii-optique-brands', 'tab' => 'list', 'deleted' => '1'), admin_url('admin.php')));
+        exit;
+    }
+
     /**
      * Render contact page with tabs (list, view, settings)
      */
@@ -252,16 +271,7 @@ class Parisii_Optique_Admin_Menu {
             <div class="wp-header-end"></div>
             <h1 class="wp-heading-inline"><?php esc_html_e('Contact', 'parisii-optique-plugin'); ?></h1>
             <?php if ($current_tab !== 'view' || !$view_id) : ?>
-            <div class="alignright">
-                <form method="post" style="display: inline-block;">
-                    <?php wp_nonce_field('parisii_optique_update_plugin', 'parisii_optique_update_nonce'); ?>
-                    <input type="hidden" name="action" value="update_plugin">
-                    <button type="submit" class="button button-secondary" onclick="return confirm('<?php esc_attr_e('Êtes-vous sûr de vouloir mettre à jour le plugin depuis le thème ?', 'parisii-optique-plugin'); ?>');">
-                        <span class="dashicons dashicons-update" style="vertical-align: middle; margin-right: 5px;"></span>
-                        <?php esc_html_e('Mise à jour', 'parisii-optique-plugin'); ?>
-                    </button>
-                </form>
-            </div>
+            <?php Parisii_Optique_Update_Plugin_Button::render(); ?>
             <?php endif; ?>
             
             <?php if ($current_tab === 'view' && $view_id) : ?>

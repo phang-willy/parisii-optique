@@ -7,12 +7,6 @@
 (function($) {
     'use strict';
 
-    // Initialize duplicate functionality when document is ready
-    $(document).ready(function() {
-        initDuplicateLinks();
-        initDuplicateMultiple();
-    });
-
     /**
      * Initialize duplicate links
      */
@@ -294,9 +288,8 @@
             }
         },
         
-        duplicateMultiple: function(ids, postType) {
-            // Implementation for multiple duplication
-            console.log('Duplicate multiple:', ids, postType);
+        duplicateMultiple: function() {
+            return false;
         },
         
         showMessage: function(message, type) {

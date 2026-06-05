@@ -7,14 +7,6 @@
 (function($) {
     'use strict';
 
-    // Initialize menu categories when document is ready
-    $(document).ready(function() {
-        initProductCategories();
-        initTabs();
-        initDropdowns();
-        initMenuTracking();
-    });
-
     /**
      * Initialize product categories
      */
@@ -33,8 +25,6 @@
         $('.product-category-link').on('click', function() {
             const categoryName = $(this).find('.category-name').text().trim();
             const categoryCount = $(this).find('.category-count').text().trim();
-            
-            console.log('Product category clicked:', categoryName, categoryCount);
             
             // Track with analytics if available
             if (typeof gtag !== 'undefined') {
@@ -72,8 +62,6 @@
                 
                 // Track tab switch
                 const tabName = $clickedItem.find('.category-name').text().trim();
-                console.log('Tab switched to:', tabName);
-                
                 if (typeof gtag !== 'undefined') {
                     gtag('event', 'tab_switch', {
                         'event_category': 'Product Categories',
@@ -93,8 +81,6 @@
             const selectedText = $(this).find('option:selected').text().trim();
             
             if (selectedValue) {
-                console.log('Category selected:', selectedText);
-                
                 // Track selection
                 if (typeof gtag !== 'undefined') {
                     gtag('event', 'category_select', {
@@ -116,9 +102,6 @@
         // Track menu item clicks
         $('.menu-item-product-category a').on('click', function() {
             const categoryName = $(this).text().trim();
-            const categoryUrl = $(this).attr('href');
-            
-            console.log('Menu category clicked:', categoryName, categoryUrl);
             
             // Track with analytics
             if (typeof gtag !== 'undefined') {
@@ -129,17 +112,6 @@
                 });
             }
         });
-
-        // Track menu hover
-        $('.menu-item-product-category').hover(
-            function() {
-                const categoryName = $(this).find('a').text().trim();
-                console.log('Menu category hovered:', categoryName);
-            },
-            function() {
-                // Hover out
-            }
-        );
     }
 
     /**
@@ -260,8 +232,12 @@
      * Load category content
      */
     function loadCategoryContent(categoryId, $category) {
+        if (typeof parisii_ajax === 'undefined' || !parisii_ajax.ajax_url) {
+            return;
+        }
+
         $.ajax({
-            url: ajaxurl,
+            url: parisii_ajax.ajax_url,
             type: 'POST',
             data: {
                 action: 'parisii_load_category_content',
@@ -273,9 +249,7 @@
                     $category.html(response.data);
                 }
             },
-            error: function() {
-                console.error('Failed to load category content');
-            }
+            error: function() {}
         });
     }
 
@@ -373,20 +347,5 @@
             location.reload();
         }
     };
-
-    /**
-     * Handle category events
-     */
-    $(document).on('category:clicked', function(event, data) {
-        console.log('Category clicked event:', data);
-    });
-    
-    $(document).on('category:filtered', function(event, data) {
-        console.log('Category filtered event:', data);
-    });
-    
-    $(document).on('category:sorted', function(event, data) {
-        console.log('Category sorted event:', data);
-    });
 
 })(jQuery);
