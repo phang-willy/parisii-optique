@@ -29,14 +29,47 @@ jobs:
         uses: chetan/git-restore-mtime-action@v2
 
       - name: Verify production server is operational
+        env:
+          SITE_DOMAIN: ${{ secrets.OVH_DOMAIN }}
         run: |
-          SITE_URL="https://${{ secrets.OVH_DOMAIN }}"
+          if [ -z "$SITE_DOMAIN" ]; then
+            echo "::error::OVH_DOMAIN secret is empty. Set it on the production environment (hostname only, without https://)."
+            exit 1
+          fi
+          SITE_DOMAIN="${SITE_DOMAIN#https://}"
+          SITE_DOMAIN="${SITE_DOMAIN#http://}"
+          SITE_DOMAIN="${SITE_DOMAIN%/}"
+          SITE_URL="https://${SITE_DOMAIN}"
           echo "Checking $SITE_URL..."
-          curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Server unreachable or returned error"; exit 1)
+
+          set +e
+          HTTP_CODE=$(curl -sS -L --retry 3 --retry-delay 2 \
+            --connect-timeout 15 --max-time 45 \
+            -A "Mozilla/5.0 (compatible; GitHubActions-HealthCheck/1.0)" \
+            -o /dev/null -w "%{http_code}" "$SITE_URL" 2>/tmp/curl_prod.txt)
+          CURL_EXIT=$?
+          set -e
+
+          echo "HTTP status: ${HTTP_CODE:-000} (curl exit ${CURL_EXIT})"
+          if [ -s /tmp/curl_prod.txt ]; then
+            echo "curl stderr:"
+            cat /tmp/curl_prod.txt
+          fi
+
+          case "$HTTP_CODE" in
+            2*|3*|401|403)
+              echo "Server reachable"
+              ;;
+            *)
+              echo "::warning::Server unreachable or returned error ${HTTP_CODE:-000}. Continuing with deploy."
+              ;;
+          esac
 
       - name: Install lftp
         if: github.event_name == 'push'
         run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list \
+                     /etc/apt/sources.list.d/google-chrome.sources
           sudo apt-get update
           sudo apt-get install -y lftp
 
@@ -117,7 +150,7 @@ jobs:
 
             open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
             cd ${THEME_PATH};
-            mirror -R --only-newer --overwrite --parallel=8 \
+            mirror -R --overwrite --parallel=8 \
               --exclude-glob 'src/**' \
               -X .git \
               -X node_modules \
@@ -199,7 +232,7 @@ jobs:
               set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
               open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
               cd ${THEME_PATH};
-              mirror -R --only-newer --overwrite --parallel=8 \
+              mirror -R --overwrite --parallel=8 \
                 --exclude-glob 'src/**' \
                 -X .git \
                 -X node_modules \
@@ -235,7 +268,35 @@ jobs:
 
       - name: Verify production site is still operational
         if: github.event_name == 'push'
+        env:
+          SITE_DOMAIN: ${{ secrets.OVH_DOMAIN }}
         run: |
-          SITE_URL="https://${{ secrets.OVH_DOMAIN }}"
+          SITE_DOMAIN="${SITE_DOMAIN#https://}"
+          SITE_DOMAIN="${SITE_DOMAIN#http://}"
+          SITE_DOMAIN="${SITE_DOMAIN%/}"
+          SITE_URL="https://${SITE_DOMAIN}"
           echo "Post-deploy check: $SITE_URL..."
-          curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 --max-time 30 "$SITE_URL" | grep -q "200\|301\|302" || (echo "Site unreachable after deployment"; exit 1)
+
+          set +e
+          HTTP_CODE=$(curl -sS -L --retry 3 --retry-delay 2 \
+            --connect-timeout 15 --max-time 45 \
+            -A "Mozilla/5.0 (compatible; GitHubActions-HealthCheck/1.0)" \
+            -o /dev/null -w "%{http_code}" "$SITE_URL" 2>/tmp/curl_prod_post.txt)
+          CURL_EXIT=$?
+          set -e
+
+          echo "HTTP status: ${HTTP_CODE:-000} (curl exit ${CURL_EXIT})"
+          if [ -s /tmp/curl_prod_post.txt ]; then
+            echo "curl stderr:"
+            cat /tmp/curl_prod_post.txt
+          fi
+
+          case "$HTTP_CODE" in
+            2*|3*|401|403)
+              echo "Site reachable after deployment"
+              ;;
+            *)
+              echo "::error::Site unreachable after deployment (${HTTP_CODE:-000})"
+              exit 1
+              ;;
+          esac

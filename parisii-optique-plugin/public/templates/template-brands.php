@@ -9,32 +9,23 @@
 get_header();
 ?>
 
-    <div class="max-w-7xl p-4 md:p-6 lg:p-8 mx-auto">
-        <header class="grid grid-cols-1 gap-4">
-        <?php
-        if (function_exists('yoast_breadcrumb')) {
-            yoast_breadcrumb('<nav class="breadcrumb text-sm text-gray-600 dark:text-gray-400 mb-6" aria-label="breadcrumb">', '</nav>');
-        } else {
-            echo '<nav class="breadcrumb text-sm text-gray-600 dark:text-gray-400 flex flex-wrap gap-1" aria-label="breadcrumb">';
-            echo '<a href="' . esc_url(home_url('/')) . '">' . __('Accueil', 'parisii-optique-plugin') . '</a>';
-            ?>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right w-4 text-gray-400">
-                <path d="m9 18 6-6-6-6"/>
-            </svg>
-            <?php
-            echo '<span class="current font-medium">' . esc_html(get_the_title()) . '</span>';
-            echo '</nav>';
-        }
-        ?>
-            <h1 class="text-4xl lg:text-5xl font-heading font-bold"><?php the_title(); ?></h1>
-        </header>
-    </div>
-    <?php while (have_posts()) : the_post(); ?>
-        <?php if (get_the_content()) : ?>
-            <?php the_content(); ?>
-        <?php endif; ?>
-    <?php endwhile; ?>
-    <section class="max-w-7xl p-4 md:p-6 lg:p-8 mx-auto">
+    <?php if (function_exists('parisii_optique_breadcrumb')) : ?>
+        <?php parisii_optique_breadcrumb(); ?>
+    <?php endif; ?>
+    <section id="marques" class="max-w-7xl p-4 md:p-6 lg:p-8 mx-auto parisii-optique-brands-content">
+        <div class="grid grid-cols-1 gap-8 mb-8">
+            <article>
+                <h3>Pour tout le monde :</h3>
+                <p>Nous proposons un large éventail de marques de lunettes pour hommes, femmes et enfants.</p>
+                <p>Venez découvrir nos collections en magasin.</p>
+            </article>
+            <article>
+                <h3>Pour les sportifs et sportives :</h3>
+                <p>Les amateurs de sport et athlètes ne sont pas en reste ! <?php echo get_the_title(); ?> met à votre disposition une gamme de lunettes spécialement conçues pour les activités physiques.</p>
+                <p>Pour vous permettre d'effectuer votre activité favorite sans faire l'impasse sur votre confort visuel, notre collection sport inclut des modèles robustes et performants, adaptés à diverses disciplines telles que la course, le cyclisme, ou les sports aquatiques.</p>
+                <p>Ces lunettes sont conçues pour offrir un confort optimal, une résistance accrue, et une visibilité parfaite, même dans les conditions les plus exigeantes.</p>
+            </article>
+        </div>
         <?php Parisii_Optique_Brand_Display::render_brands_grid(); ?>
     </section>
 <?php

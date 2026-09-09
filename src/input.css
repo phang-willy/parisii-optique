@@ -36,21 +36,12 @@
 }
 
 :root {
-  --color-main: #6d513c;
+  --color-main: #94644d;
   --color-main-hover: #392b1f;
   --color-main-focus: #392b1f;
-  --color-secondary: #ebdfcf;
-  --color-secondary-hover: #ebdfcf;
-  --color-secondary-focus: #9F7550;
-}
-
-[data-theme="dark"] {
-  --color-main: #6d513c;
-  --color-main-hover: #392b1f;
-  --color-main-focus: #392b1f;
-  --color-secondary: #9F7550;
-  --color-secondary-hover: #968368;
-  --color-secondary-focus: #968368;
+  --color-secondary: #c5b68d;
+  --color-secondary-hover: #aa9e7c;
+  --color-secondary-focus: #978c6d;
 }
 
 @utility bg-main {
@@ -140,27 +131,27 @@
   }
   
   h1 {
-    @apply text-4xl md:text-5xl lg:text-6xl font-bold;
+    @apply text-2xl md:text-3xl lg:text-4xl font-bold;
   }
   
   h2 {
-    @apply text-3xl md:text-4xl lg:text-5xl font-semibold;
+    @apply text-xl md:text-2xl lg:text-3xl font-semibold;
   }
   
   h3 {
-    @apply text-2xl md:text-3xl font-semibold;
+    @apply text-lg md:text-xl font-semibold;
   }
   
   h4 {
-    @apply text-xl md:text-2xl font-medium;
+    @apply text-base md:text-lg font-medium;
   }
   
   h5 {
-    @apply text-lg md:text-xl font-medium;
+    @apply text-sm md:text-base font-medium;
   }
   
   h6 {
-    @apply text-base md:text-lg font-medium;
+    @apply text-sm font-medium;
   }
 }
 
@@ -184,6 +175,21 @@
 }
 
 @layer header {
+  .navbar {
+    transition: transform 180ms ease, opacity 180ms ease;
+    will-change: transform;
+  }
+
+  .navbar.navbar-is-hidden {
+    transform: translateY(calc(-100% - 1px));
+    pointer-events: none;
+  }
+
+  .navbar.navbar-is-hidden:focus-within {
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
   .navbar .desktop-submenu-toggle svg,
   .navbar.desktop-submenu-toggle-nested svg {
     @apply transition-transform duration-200;
@@ -222,6 +228,12 @@
         }
       }
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar {
+    transition: none;
   }
 }
 
@@ -297,7 +309,7 @@ a:hover, a:focus {
 }
 
 .scroll-to-top {
-  @apply fixed bottom-8 right-8 z-40 text-white p-3 rounded-full transition-all duration-200 opacity-0 invisible cursor-pointer border-none;
+  @apply fixed bottom-4 right-4 lg:bottom-8 lg:right-8 z-40 text-white p-3 rounded-full transition-all duration-200 opacity-0 invisible cursor-pointer border-none;
   background-color: var(--color-main);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
@@ -361,11 +373,11 @@ button:focus-visible {
 
 @media print {
   .scroll-to-top {
-    @apply !hidden;
+    @apply hidden!;
   }
   
   body {
-    @apply !bg-white !text-black;
+    @apply bg-white! text-black!;
   }
 }
 
@@ -529,4 +541,29 @@ body {
 
 .dark .parisii-optique-brand-card:hover {
   box-shadow: 0 10px 25px -5px rgba(255, 255, 255, 0.12), 0 8px 10px -6px rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+#google-maps-embed-wrapper iframe {
+  @apply w-full h-full aspect-square lg:aspect-auto lg:h-2/3;
+}
+
+.parisii-default-image {
+  @apply relative;
+}
+
+.parisii-default-image.is-editable:hover .parisii-default-image__toolbar,
+.parisii-default-image.is-editable:focus-within .parisii-default-image__toolbar {
+  @apply opacity-100;
+}
+
+.parisii-default-image__toolbar {
+  @apply absolute inset-0 flex flex-wrap items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity;
+}
+
+.parisii-default-image.is-saving .parisii-default-image__toolbar {
+  @apply opacity-100;
+}
+
+.parisii-default-image__btn {
+  @apply rounded-md border border-white bg-white/90 px-3 py-1.5 text-sm font-medium text-black hover:bg-white;
 }
