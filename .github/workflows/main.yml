@@ -68,6 +68,8 @@ jobs:
       - name: Install lftp
         if: github.event_name == 'push'
         run: |
+          sudo rm -f /etc/apt/sources.list.d/google-chrome.list \
+                     /etc/apt/sources.list.d/google-chrome.sources
           sudo apt-get update
           sudo apt-get install -y lftp
 
