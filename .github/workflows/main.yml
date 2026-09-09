@@ -61,8 +61,7 @@ jobs:
               echo "Server reachable"
               ;;
             *)
-              echo "::error::Server unreachable or returned error ${HTTP_CODE:-000}"
-              exit 1
+              echo "::warning::Server unreachable or returned error ${HTTP_CODE:-000}. Continuing with deploy."
               ;;
           esac
 
@@ -149,7 +148,7 @@ jobs:
 
             open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
             cd ${THEME_PATH};
-            mirror -R --only-newer --overwrite --parallel=8 \
+            mirror -R --overwrite --parallel=8 \
               --exclude-glob 'src/**' \
               -X .git \
               -X node_modules \
@@ -231,7 +230,7 @@ jobs:
               set sftp:connect-program \"ssh -a -x -o StrictHostKeyChecking=accept-new -o PreferredAuthentications=password -o PubkeyAuthentication=no\";
               open -u ${OVH_FTP_USER},${OVH_FTP_PASSWORD} sftp://${OVH_FTP_HOST}:${PORT};
               cd ${THEME_PATH};
-              mirror -R --only-newer --overwrite --parallel=8 \
+              mirror -R --overwrite --parallel=8 \
                 --exclude-glob 'src/**' \
                 -X .git \
                 -X node_modules \

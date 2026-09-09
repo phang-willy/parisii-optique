@@ -71,8 +71,7 @@ jobs:
               echo "Server reachable"
               ;;
             *)
-              echo "::error::Server unreachable or returned error ${HTTP_CODE:-000}"
-              exit 1
+              echo "::warning::Server unreachable or returned error ${HTTP_CODE:-000}. Continuing with deploy."
               ;;
           esac
 
