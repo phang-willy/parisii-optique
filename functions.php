@@ -477,6 +477,8 @@ require_once get_template_directory() . '/inc/plugin-sync.php';
 
 // Include components
 require_once get_template_directory() . '/components/sections.php';
+require_once get_template_directory() . '/components/default-image.php';
+require_once get_template_directory() . '/components/breadcrumb.php';
 require_once get_template_directory() . '/components/theme-switcher.php';
 require_once get_template_directory() . '/components/duplicate-content.php';
 require_once get_template_directory() . '/components/advanced-duplicate.php';
