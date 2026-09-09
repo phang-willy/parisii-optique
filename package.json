@@ -21,8 +21,7 @@
   },
   "devDependencies": {
     "@wordpress/scripts": "^31.4.0",
-    "autoprefixer": "^10.4.16",
-    "baseline-browser-mapping": "^2.9.19"
+    "autoprefixer": "^10.4.16"
   },
   "overrides": {
     "picomatch": "^4.0.4",
