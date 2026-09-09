@@ -39,18 +39,9 @@
   --color-main: #94644d;
   --color-main-hover: #392b1f;
   --color-main-focus: #392b1f;
-  --color-secondary: #ebdfcf;
-  --color-secondary-hover: #ebdfcf;
-  --color-secondary-focus: #9F7550;
-}
-
-[data-theme="dark"] {
-  --color-main: #94644d;
-  --color-main-hover: #392b1f;
-  --color-main-focus: #392b1f;
-  --color-secondary: #9F7550;
-  --color-secondary-hover: #968368;
-  --color-secondary-focus: #968368;
+  --color-secondary: #c5b68d;
+  --color-secondary-hover: #aa9e7c;
+  --color-secondary-focus: #978c6d;
 }
 
 @utility bg-main {
@@ -140,27 +131,27 @@
   }
   
   h1 {
-    @apply text-4xl md:text-5xl lg:text-6xl font-bold;
+    @apply text-2xl md:text-3xl lg:text-4xl font-bold;
   }
   
   h2 {
-    @apply text-3xl md:text-4xl lg:text-5xl font-semibold;
+    @apply text-xl md:text-2xl lg:text-3xl font-semibold;
   }
   
   h3 {
-    @apply text-2xl md:text-3xl font-semibold;
+    @apply text-lg md:text-xl font-semibold;
   }
   
   h4 {
-    @apply text-xl md:text-2xl font-medium;
+    @apply text-base md:text-lg font-medium;
   }
   
   h5 {
-    @apply text-lg md:text-xl font-medium;
+    @apply text-sm md:text-base font-medium;
   }
   
   h6 {
-    @apply text-base md:text-lg font-medium;
+    @apply text-sm font-medium;
   }
 }
 
@@ -554,4 +545,25 @@ body {
 
 #google-maps-embed-wrapper iframe {
   @apply w-full h-full aspect-square lg:aspect-auto lg:h-2/3;
+}
+
+.parisii-default-image {
+  @apply relative;
+}
+
+.parisii-default-image.is-editable:hover .parisii-default-image__toolbar,
+.parisii-default-image.is-editable:focus-within .parisii-default-image__toolbar {
+  @apply opacity-100;
+}
+
+.parisii-default-image__toolbar {
+  @apply absolute inset-0 flex flex-wrap items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity;
+}
+
+.parisii-default-image.is-saving .parisii-default-image__toolbar {
+  @apply opacity-100;
+}
+
+.parisii-default-image__btn {
+  @apply rounded-md border border-white bg-white/90 px-3 py-1.5 text-sm font-medium text-black hover:bg-white;
 }
