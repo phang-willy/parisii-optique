@@ -39,6 +39,7 @@ function parisii_optique_breadcrumb($args = []) {
                 '<nav class="' . esc_attr($args['class']) . '" aria-label="breadcrumb">',
                 '</nav>'
             );
+            echo '<h1 class="text-4xl md:text-5xl font-heading font-bold text-gray-900 dark:text-white">' . esc_html(get_the_title($args['post_id'])) . '</h1>';
         } else {
             $post_id = absint($args['post_id']);
             $parents = [];

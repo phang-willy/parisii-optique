@@ -238,9 +238,7 @@ function parisii_optique_menu_product_categories_js() {
         // Add click tracking for product categories
         $('.menu-item-product-category a').on('click', function() {
             var categoryName = $(this).text().trim();
-            console.log('Product category clicked:', categoryName);
-            
-            // You can add analytics tracking here
+
             if (typeof gtag !== 'undefined') {
                 gtag('event', 'click', {
                     'event_category': 'Menu',

@@ -44,6 +44,10 @@
   --color-secondary-focus: #978c6d;
 }
 
+@utility aspect-ratio-220-125 {
+  aspect-ratio: 220 / 125;
+}
+
 @utility bg-main {
   background-color: var(--color-main);
 }

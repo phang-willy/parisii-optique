@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - dev
+      - pre-prod
+      - main
+  pull_request:
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Check PHP syntax
+        run: find . -name '*.php' -not -path './node_modules/*' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+
+      - name: Test hours, maps and canonical helpers
+        run: php tests/run.php
+
+  assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build theme assets
+        run: npm run build
+
+      - name: Verify built CSS exists
+        run: test -s dist/style.css

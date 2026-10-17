@@ -14,11 +14,13 @@
                     <?php
                         parisii_optique_default_image([
                             'id' => 'home-partners-novacel',
+                            'alt' => 'Verres Novacel proposés par Parisii Optique',
                         ]);
                     ?>
                     <?php
                         parisii_optique_default_image([
                             'id' => 'home-partners-essilor',
+                            'alt' => 'Verres Essilor proposés par Parisii Optique',
                         ]);
                     ?>
                 </div>
