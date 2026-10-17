@@ -43,6 +43,31 @@ jobs:
           echo "release=$(node -p "JSON.parse(require('fs').readFileSync('plan.json','utf8')).release")" >> "$GITHUB_OUTPUT"
           echo "version=$(node -p "JSON.parse(require('fs').readFileSync('plan.json','utf8')).version")" >> "$GITHUB_OUTPUT"
 
+      - name: Check existing release branch
+        if: steps.plan.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          set -euo pipefail
+          set +e
+          git ls-remote --exit-code --heads origin "refs/heads/release/${VERSION}"
+          status=$?
+          set -e
+          if [ "$status" -eq 2 ]; then
+            echo "Aucune branche release/${VERSION}"
+            exit 0
+          fi
+          if [ "$status" -ne 0 ]; then
+            echo "Impossible de lire la branche release/${VERSION}"
+            exit 1
+          fi
+          git fetch origin "refs/heads/release/${VERSION}:refs/remotes/origin/release/${VERSION}"
+          parent="$(git rev-parse "refs/remotes/origin/release/${VERSION}^")"
+          if [ "$parent" != "$(git rev-parse HEAD)" ]; then
+            echo "La branche release/${VERSION} ne correspond pas a ce commit. Supprime-la avant de relancer: l'archive ne doit pas etre publiee avec un autre contenu."
+            exit 1
+          fi
+
       - name: Setup theme
         if: steps.plan.outputs.release == 'true'
         uses: ./.github/actions/setup-theme
@@ -87,6 +112,11 @@ jobs:
           set -euo pipefail
           REMOTE_BRANCH="refs/remotes/origin/release/${VERSION}"
           if git fetch origin "refs/heads/release/${VERSION}:${REMOTE_BRANCH}"; then
+            parent="$(git rev-parse "${REMOTE_BRANCH}^")"
+            if [ "$parent" != "$(git rev-parse HEAD)" ]; then
+              echo "La branche release/${VERSION} ne correspond pas au commit publie"
+              exit 1
+            fi
             echo "La branche release/${VERSION} existe deja"
           else
             git add style.css package.json parisii-optique-plugin/parisii-optique-plugin.php updates-plugin/parisii-updates.php
@@ -119,6 +149,14 @@ jobs:
               echo "${branch} est deja dans pre-prod"
               continue
             fi
+            if ! merged="$(gh pr list --head "$branch" --base pre-prod --state merged --json number --jq '.[0].number')"; then
+              echo "GitHub a refuse la lecture des pull requests. Dans Settings > Actions > General, coche Allow GitHub Actions to create and approve pull requests."
+              exit 1
+            fi
+            if [ -n "$merged" ]; then
+              echo "Pull request #${merged} deja mergee pour ${branch}"
+              continue
+            fi
             if ! existing="$(gh pr list --head "$branch" --base pre-prod --state open --json number --jq '.[0].number')"; then
               echo "GitHub a refuse la lecture des pull requests. Dans Settings > Actions > General, coche Allow GitHub Actions to create and approve pull requests."
               exit 1
@@ -128,10 +166,16 @@ jobs:
               continue
             fi
             version="${branch#release/}"
-            if ! gh pr create --base pre-prod --head "$branch" --title "chore(release): ${version}" --body "La version ${version} est publiee sur le canal beta. Cette pull request aligne les numeros de version du depot."; then
+            if ! create_output="$(gh pr create --base pre-prod --head "$branch" --title "chore(release): ${version}" --body "La version ${version} est publiee sur le canal beta. Cette pull request aligne les numeros de version du depot." 2>&1)"; then
+              if printf '%s\n' "$create_output" | grep -Eq "No commits between|already exists"; then
+                echo "$create_output"
+                continue
+              fi
+              echo "$create_output"
               echo "GitHub a refuse la pull request. Dans Settings > Actions > General, coche Allow GitHub Actions to create and approve pull requests."
               exit 1
             fi
+            echo "$create_output"
           done < <(git for-each-ref --format='%(refname:strip=3)' refs/remotes/origin/release)
           if [ "$found" -eq 0 ]; then
             echo "Aucune branche release a aligner"
