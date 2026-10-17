@@ -3,9 +3,6 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
@@ -37,7 +34,7 @@ jobs:
         run: php tests/run.php
 
       - name: Restore git file mtimes (incremental SFTP)
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         uses: chetan/git-restore-mtime-action@v2
 
       - name: Verify production server is operational
@@ -78,7 +75,7 @@ jobs:
           esac
 
       - name: Install lftp
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         run: |
           sudo rm -f /etc/apt/sources.list.d/google-chrome.list \
                      /etc/apt/sources.list.d/google-chrome.sources
@@ -87,7 +84,7 @@ jobs:
 
       # Juste après le check HTTP : login SFTP avant npm/build (échec rapide si secrets faux).
       - name: Verify OVH SFTP login
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         env:
           OVH_FTP_USER: ${{ secrets.OVH_FTP_USER }}
           OVH_FTP_PASSWORD: ${{ secrets.OVH_FTP_PASSWORD }}
@@ -126,7 +123,7 @@ jobs:
       # Surcharge : secret OVH_SFTP_THEME_PATH (relatif ou absolu si ton hébergeur diffère).
       # lftp : open -u user,password (virgule dans le MDP = cassé → clé SSH).
       - name: Deploy or update theme on OVH via SFTP
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         env:
           OVH_SFTP_THEME_PATH: ${{ secrets.OVH_SFTP_THEME_PATH }}
           OVH_FTP_USER: ${{ secrets.OVH_FTP_USER }}
@@ -180,7 +177,7 @@ jobs:
           "
 
       - name: Verify theme exists (retry deploy if missing)
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         env:
           OVH_SFTP_THEME_PATH: ${{ secrets.OVH_SFTP_THEME_PATH }}
           OVH_FTP_USER: ${{ secrets.OVH_FTP_USER }}
@@ -276,12 +273,12 @@ jobs:
           fi
 
       - name: Purge cache
-        if: github.event_name == 'push' && vars.OVH_PURGE_ENABLED == 'true'
+        if: github.event_name == 'workflow_dispatch' && vars.OVH_PURGE_ENABLED == 'true'
         run: |
           curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 "${{ secrets.OVH_CACHE_PURGE_URL }}" | grep -q "200" || echo "Cache purge returned non-200 (continuing)"
 
       - name: Verify production site is still operational
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         env:
           SITE_DOMAIN: ${{ secrets.OVH_DOMAIN }}
         run: |

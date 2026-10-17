@@ -1,0 +1,40 @@
+name: Setup theme
+description: Run PHP checks, install Node dependencies, and build the theme assets.
+
+runs:
+  using: composite
+  steps:
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: "8.3"
+        coverage: none
+
+    - name: Check PHP syntax
+      shell: bash
+      run: find . -name '*.php' -not -path './node_modules/*' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+
+    - name: Test helpers and update rules
+      shell: bash
+      run: php tests/run.php
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v5
+      with:
+        node-version: "24"
+        cache: npm
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci
+
+    - name: Build theme assets
+      shell: bash
+      run: npm run build
+
+    - name: Verify built assets
+      shell: bash
+      run: |
+        test -s dist/style.css
+        test "$(wc -c < dist/style.css)" -gt 10000
+        test -s blocks/dist/blocks/index.js

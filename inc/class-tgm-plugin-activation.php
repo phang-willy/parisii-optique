@@ -81,53 +81,33 @@ function parisii_optique_auto_activate_plugin() {
 add_action('after_switch_theme', 'parisii_optique_auto_activate_plugin');
 
 /**
- * Vérifier et installer le plugin même si le thème est déjà actif
- * S'exécute une seule fois après l'installation/mise à jour
+ * Copy the bundled plugin once when it is missing.
+ * A theme update must not activate a plugin that is already installed.
  */
 function parisii_optique_check_plugin_on_init() {
-    // Vérifier si on a déjà fait la vérification
     if (get_option('parisii_optique_plugin_checked')) {
         return;
     }
-    
-    // Vérifier si on est en admin
+
     if (!is_admin()) {
         return;
     }
-    
+
     $plugin_file = 'parisii-optique-plugin/parisii-optique-plugin.php';
     $plugin_path = WP_PLUGIN_DIR . '/' . $plugin_file;
-    
-    // Si le plugin n'existe pas dans le dossier plugins, le copier
-    if (!file_exists($plugin_path)) {
+    $already_installed = file_exists($plugin_path);
+
+    if (!$already_installed) {
         parisii_optique_copy_plugin_to_plugins_dir();
     }
-    
-    // Si le plugin existe mais n'est pas activé, l'activer
-    if (file_exists($plugin_path) && !is_plugin_active($plugin_file)) {
+
+    if (!$already_installed && file_exists($plugin_path) && !is_plugin_active($plugin_file)) {
         activate_plugin($plugin_file);
     }
-    
-    // Marquer comme vérifié (se réinitialisera à chaque mise à jour du thème)
+
     update_option('parisii_optique_plugin_checked', true);
 }
 add_action('admin_init', 'parisii_optique_check_plugin_on_init');
-
-/**
- * Réinitialiser la vérification lors de la mise à jour du thème
- */
-function parisii_optique_reset_plugin_check_on_upgrade($upgrader_object, $options) {
-    // Vérifier si c'est une mise à jour de thème
-    if ($options['type'] !== 'theme') {
-        return;
-    }
-    
-    // Vérifier si c'est notre thème
-    if (isset($options['themes']) && in_array('parisii-optique', $options['themes'])) {
-        delete_option('parisii_optique_plugin_checked');
-    }
-}
-add_action('upgrader_process_complete', 'parisii_optique_reset_plugin_check_on_upgrade', 10, 2);
 
 /**
  * Afficher une notice si le plugin n'est pas activé

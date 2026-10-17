@@ -3,9 +3,6 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 on:
-  push:
-    branches:
-      - pre-prod
   pull_request:
     branches:
       - pre-prod
@@ -87,7 +84,7 @@ jobs:
           esac
 
       - name: Install lftp
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         run: |
           sudo rm -f /etc/apt/sources.list.d/google-chrome.list \
                      /etc/apt/sources.list.d/google-chrome.sources
@@ -95,7 +92,7 @@ jobs:
           sudo apt-get install -y lftp
 
       - name: Prepare optional SFTP SSH key
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         env:
           HOSTINGER_SSH_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
         run: |
@@ -106,7 +103,7 @@ jobs:
           fi
 
       - name: Verify Hostinger SFTP login and path
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         env:
           HOSTINGER_DOMAIN: ${{ secrets.HOSTINGER_DOMAIN }}
           HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST || secrets.HOSTINGER_SSH_HOST }}
@@ -142,7 +139,7 @@ jobs:
           " || { echo "::error::SFTP login/path failed. Check HOSTINGER_FTP_HOST, HOSTINGER_FTP_USER, HOSTINGER_FTP_PASSWORD, HOSTINGER_SFTP_PORT and HOSTINGER_SFTP_THEME_PATH."; exit 1; }
 
       - name: Deploy theme on Hostinger via SFTP
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         env:
           HOSTINGER_DOMAIN: ${{ secrets.HOSTINGER_DOMAIN }}
           HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST || secrets.HOSTINGER_SSH_HOST }}
@@ -200,7 +197,7 @@ jobs:
           "
 
       - name: Verify deployed theme files via SFTP
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         env:
           HOSTINGER_DOMAIN: ${{ secrets.HOSTINGER_DOMAIN }}
           HOSTINGER_FTP_HOST: ${{ secrets.HOSTINGER_FTP_HOST || secrets.HOSTINGER_SSH_HOST }}
@@ -245,7 +242,7 @@ jobs:
           echo "Theme OK via SFTP: style.css, dist/style.css and functions.php found"
 
       - name: Verify deployed CSS over HTTP
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         run: |
           CSS_URL="https://${{ secrets.HOSTINGER_DOMAIN }}/wp-content/themes/parisii-optique/dist/style.css?deploy=${GITHUB_SHA}"
           echo "Checking CSS URL: $CSS_URL"
@@ -255,12 +252,12 @@ jobs:
           test "$BYTES" -gt 10000 || (echo "::error::CSS is missing or unexpectedly small at $CSS_URL"; exit 1)
 
       - name: Purge cache
-        if: github.event_name == 'push' && vars.HOSTINGER_PURGE_ENABLED == 'true'
+        if: github.event_name == 'workflow_dispatch' && vars.HOSTINGER_PURGE_ENABLED == 'true'
         run: |
           curl -sf -o /dev/null -w "%{http_code}" --connect-timeout 10 "${{ secrets.HOSTINGER_CACHE_PURGE_URL }}" | grep -q "200" || echo "Cache purge returned non-200 (continuing)"
 
       - name: Verify pre-prod site is still operational
-        if: github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch'
         env:
           SITE_DOMAIN: ${{ secrets.HOSTINGER_DOMAIN }}
         run: |
@@ -295,5 +292,5 @@ jobs:
           esac
 
       - name: Cleanup SFTP key
-        if: always() && github.event_name == 'push'
+        if: always() && github.event_name == 'workflow_dispatch'
         run: rm -f ~/.ssh/deploy_key
