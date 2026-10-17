@@ -1,0 +1,80 @@
+name: Bump major version
+
+on:
+  workflow_dispatch:
+    inputs:
+      major:
+        description: "Nouvelle version majeure, par exemple 2"
+        required: true
+        type: string
+
+concurrency:
+  group: updates-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Require main branch
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "Lancez ce workflow depuis la branche main."
+          exit 1
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup theme
+        uses: ./.github/actions/setup-theme
+
+      - name: Plan major version
+        id: plan
+        run: |
+          node scripts/release/version.mjs plan --channel major --major "${{ inputs.major }}" | tee plan.json
+          echo "version=$(node -p "JSON.parse(require('fs').readFileSync('plan.json','utf8')).version")" >> "$GITHUB_OUTPUT"
+
+      - name: Apply version
+        run: node scripts/release/version.mjs apply --version "${{ steps.plan.outputs.version }}"
+
+      - name: Package archives
+        run: |
+          VERSION="${{ steps.plan.outputs.version }}"
+          mkdir -p release-artifacts
+          node scripts/release/package-theme.mjs --version "$VERSION" --output "release-artifacts/parisii-optique-${VERSION}.zip"
+          node scripts/release/package-plugin.mjs --slug parisii-optique-plugin --source parisii-optique-plugin --main parisii-optique-plugin.php --version "$VERSION" --output "release-artifacts/parisii-optique-plugin-${VERSION}.zip"
+          node scripts/release/package-plugin.mjs --slug updates-plugin --source updates-plugin --main parisii-updates.php --version "$VERSION" --output "release-artifacts/updates-plugin-${VERSION}.zip"
+          node scripts/release/write-catalog.mjs --dir release-artifacts --channel stable --version "$VERSION"
+
+      - name: Publish stable
+        env:
+          SSH_HOST: ${{ secrets.PROD_HOST }}
+          SSH_PORT: ${{ secrets.PROD_SSH_PORT }}
+          SSH_USER: ${{ secrets.PROD_USER }}
+          SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          SSH_PATH: ${{ secrets.PROD_PATH }}
+          CHANNEL: stable
+          VERSION: ${{ steps.plan.outputs.version }}
+          CATALOG: release-artifacts/latest.json
+          ARTIFACTS_DIR: release-artifacts
+        run: bash scripts/release/publish-vps.sh
+
+      - name: Tag major release
+        env:
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+        run: |
+          git add style.css package.json parisii-optique-plugin/parisii-optique-plugin.php updates-plugin/parisii-updates.php
+          git commit -m "chore(release): ${{ steps.plan.outputs.version }} [skip ci]"
+          git tag "v${{ steps.plan.outputs.version }}"
+          git push origin HEAD:main
+          git push origin "v${{ steps.plan.outputs.version }}"

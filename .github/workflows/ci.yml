@@ -32,11 +32,24 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: "24"
+
+      - name: Test release version rules
+        run: node --test scripts/release/version.test.mjs
+
+      - name: Check conventional commits
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node scripts/release/check-commits.mjs
 
       - name: Install dependencies
         run: npm install
