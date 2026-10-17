@@ -10,6 +10,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 require dirname(__DIR__) . '/inc/helpers-pure.php';
+require dirname(__DIR__) . '/updates-plugin/version-rules.php';
 
 $failures = 0;
 
@@ -186,6 +187,34 @@ parisii_assert(!str_contains($srcset, 'woocommerce-placeholder-1024x1024.webp'),
 parisii_assert(parisii_optique_build_placeholder_srcset('https://example.test/wp-content/uploads', [
     '2026/02/woocommerce-placeholder-1024x1024-1.webp',
 ], 1024) === '', 'dated fallback does not advertise missing root sizes');
+
+parisii_assert(parisii_updates_channel_for_environment('production') === 'stable', 'production reads the stable channel');
+parisii_assert(parisii_updates_channel_for_environment('staging') === 'beta', 'staging reads the beta channel');
+parisii_assert(parisii_updates_channel_for_environment('local') === '', 'local does not request updates');
+parisii_assert(parisii_updates_channel_for_environment('') === '', 'a missing environment does not request updates');
+parisii_assert(parisii_updates_is_channel_version('stable', '1.3.0') === true, 'stable accepts 1.3.0');
+parisii_assert(parisii_updates_is_channel_version('stable', '1.3.0-beta.1') === false, 'stable rejects a beta version');
+parisii_assert(parisii_updates_is_channel_version('beta', '1.3.0-beta.2') === true, 'beta accepts 1.3.0-beta.2');
+parisii_assert(parisii_updates_is_channel_version('beta', '1.3.0') === false, 'beta rejects a stable version');
+parisii_assert(parisii_updates_is_newer('1.2.3', '1.3.0-beta.1') === true, 'a beta preview is newer than the previous stable');
+parisii_assert(parisii_updates_is_newer('1.3.0-beta.1', '1.3.0-beta.2') === true, 'beta numbers increase');
+parisii_assert(parisii_updates_is_newer('1.3.0', '1.3.0-beta.2') === false, 'a beta is not newer than its stable release');
+$package = parisii_updates_package_url('stable', 'parisii-optique', '1.3.0');
+parisii_assert($package === 'https://updates.phangwilly.com/stable/parisii-optique-1.3.0.zip', 'theme package URL stays on the stable channel');
+$plugin_package = parisii_updates_package_url('beta', 'parisii-optique-plugin', '1.3.0-beta.1');
+parisii_assert($plugin_package === 'https://updates.phangwilly.com/beta/parisii-optique-plugin-1.3.0-beta.1.zip', 'plugin package URL stays on the beta channel');
+parisii_assert(parisii_updates_package_is_allowed('stable', 'parisii-optique', '1.3.0', $package) === true, 'the expected package URL is accepted');
+parisii_assert(parisii_updates_package_is_allowed('stable', 'parisii-optique', '1.3.0', 'https://example.test/stable/parisii-optique-1.3.0.zip') === false, 'another host is rejected');
+parisii_assert(parisii_updates_offer_is_installable('beta', '1.0.0', array(
+    'slug' => 'parisii-optique-plugin',
+    'version' => '1.0.1-beta.1',
+    'package' => parisii_updates_package_url('beta', 'parisii-optique-plugin', '1.0.1-beta.1'),
+)) === true, 'a newer plugin beta can be offered');
+parisii_assert(parisii_updates_offer_is_installable('stable', '1.0.0', array(
+    'slug' => 'parisii-optique',
+    'version' => '1.0.1-beta.1',
+    'package' => parisii_updates_package_url('stable', 'parisii-optique', '1.0.1-beta.1'),
+)) === false, 'production does not offer a beta package');
 
 if ($failures > 0) {
     fwrite(STDERR, $failures . " test(s) failed\n");

@@ -4,6 +4,7 @@
  * Plugin URI: https://parisii-optique.fr
  * Description: Plugin de gestion des marques pour Parisii Optique
  * Version: 1.0.0
+ * Update URI: https://updates.phangwilly.com/
  * Author: Parisii Optique
  * Author URI: https://parisii-optique.fr
  * Text Domain: parisii-optique-plugin
