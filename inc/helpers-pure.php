@@ -64,13 +64,21 @@ function parisii_optique_parse_opening_hours($value) {
     }
 
     if (preg_match('/(\d{1,2})\s*h\s*(\d{2})?\s*-\s*(\d{1,2})\s*h\s*(\d{2})?/iu', parisii_optique_normalize_hours_text($label), $matches)) {
-        return [
-            'closed' => false,
-            'opens'  => sprintf('%02d:%02d', (int) $matches[1], $matches[2] !== '' ? (int) $matches[2] : 0),
-            'closes' => sprintf('%02d:%02d', (int) $matches[3], $matches[4] !== '' ? (int) $matches[4] : 0),
-            'label'  => $label,
-            'schema' => true,
-        ];
+        $open_hour = (int) ($matches[1] ?? 0);
+        $open_minutes = ($matches[2] ?? '') !== '' ? (int) $matches[2] : 0;
+        $close_hour = (int) ($matches[3] ?? 0);
+        $close_minutes = ($matches[4] ?? '') !== '' ? (int) $matches[4] : 0;
+        $valid = $open_hour <= 23 && $close_hour <= 23 && $open_minutes <= 59 && $close_minutes <= 59;
+
+        if ($valid) {
+            return [
+                'closed' => false,
+                'opens'  => sprintf('%02d:%02d', $open_hour, $open_minutes),
+                'closes' => sprintf('%02d:%02d', $close_hour, $close_minutes),
+                'label'  => $label,
+                'schema' => true,
+            ];
+        }
     }
 
     return [
@@ -525,4 +533,45 @@ function parisii_optique_rewrite_origin($url, $origin) {
     $query = isset($parts['query']) ? '?' . $parts['query'] : '';
 
     return $scheme . '://' . $origin_parts['host'] . $path . $query;
+}
+
+/**
+ * Assemble the document title without repeating the site name.
+ *
+ * An empty managed title keeps the title WordPress already built.
+ *
+ * @param array<string,string> $parts         Native title parts.
+ * @param string               $managed_title Theme title, or an empty string.
+ * @param string               $site_name     Site name.
+ * @param bool                 $is_front_page Whether this is the front page.
+ * @return array<string,string>
+ */
+function parisii_optique_finalize_document_title_parts(array $parts, $managed_title, $site_name, $is_front_page) {
+    unset($parts['tagline']);
+
+    $managed_title = trim((string) $managed_title);
+    $site_name = trim((string) $site_name);
+
+    if ($is_front_page) {
+        if ($managed_title !== '') {
+            $parts['title'] = $managed_title;
+        }
+        unset($parts['site']);
+
+        return $parts;
+    }
+
+    if ($managed_title !== '') {
+        $parts['title'] = $managed_title;
+    }
+
+    if ($site_name !== '') {
+        $parts['site'] = $site_name;
+    }
+
+    if (isset($parts['title'], $parts['site']) && $parts['title'] === $parts['site']) {
+        unset($parts['site']);
+    }
+
+    return $parts;
 }

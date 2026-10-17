@@ -65,7 +65,79 @@ foreach ($schema as $specification) {
 parisii_assert(!in_array('Sunday', $days, true) && in_array('Monday', $days, true) && in_array('Friday', $days, true), 'schema lists open days and omits Sunday');
 
 $closed = parisii_optique_parse_opening_hours('Fermé');
-parisii_assert($closed['schema'] === false && $closed['opens'] === '', 'closed text does not invent opening times');
+parisii_assert($closed['closed'] === true && $closed['schema'] === false && $closed['opens'] === '' && $closed['closes'] === '', 'Fermé has no opening range');
+
+$hour_cases = [
+    '9h - 19h'       => ['09:00', '19:00'],
+    '9h30 - 19h'     => ['09:30', '19:00'],
+    '9h - 19h30'     => ['09:00', '19:30'],
+    '09h30 - 19h00'  => ['09:30', '19:00'],
+];
+foreach ($hour_cases as $input => $expected) {
+    $warning = null;
+    set_error_handler(static function ($severity, $message) use (&$warning) {
+        $warning = $message;
+        return true;
+    });
+    $parsed = parisii_optique_parse_opening_hours($input);
+    restore_error_handler();
+    parisii_assert(
+        $warning === null && $parsed['opens'] === $expected[0] && $parsed['closes'] === $expected[1] && $parsed['schema'] === true,
+        $input . ' parses to ' . $expected[0] . '-' . $expected[1] . ' without a warning'
+    );
+}
+
+$invalid_hours = parisii_optique_parse_opening_hours('25h - 19h');
+parisii_assert($invalid_hours['schema'] === false && $invalid_hours['opens'] === '' && $invalid_hours['closes'] === '', 'invalid hours do not invent a range');
+
+$author_title = parisii_optique_finalize_document_title_parts(
+    ['title' => 'Ada Lovelace', 'site' => 'Parisii Optique', 'tagline' => 'Opticien'],
+    '',
+    'Parisii Optique',
+    false
+);
+parisii_assert(
+    $author_title['title'] === 'Ada Lovelace' && ($author_title['site'] ?? '') === 'Parisii Optique' && !isset($author_title['tagline']),
+    'author archive keeps the native title'
+);
+
+$date_title = parisii_optique_finalize_document_title_parts(
+    ['title' => 'octobre 2026'],
+    'octobre 2026',
+    'Parisii Optique',
+    false
+);
+parisii_assert(
+    $date_title['title'] === 'octobre 2026' && ($date_title['site'] ?? '') === 'Parisii Optique',
+    'date archive title is not replaced by the site name'
+);
+
+$term_title = parisii_optique_finalize_document_title_parts(
+    ['title' => 'Archives'],
+    'Lunettes',
+    'Parisii Optique',
+    false
+);
+parisii_assert($term_title['title'] === 'Lunettes' && ($term_title['site'] ?? '') === 'Parisii Optique', 'taxonomy archive keeps its explicit title');
+
+$duplicate_title = parisii_optique_finalize_document_title_parts(
+    ['title' => 'Parisii Optique'],
+    'Parisii Optique',
+    'Parisii Optique',
+    false
+);
+parisii_assert($duplicate_title['title'] === 'Parisii Optique' && !isset($duplicate_title['site']), 'site name is not repeated on an archive title');
+
+$front_title = parisii_optique_finalize_document_title_parts(
+    ['title' => 'Parisii Optique', 'site' => 'Parisii Optique'],
+    'Opticien à Cormeilles-en-Parisis — Parisii Optique',
+    'Parisii Optique',
+    true
+);
+parisii_assert(
+    $front_title['title'] === 'Opticien à Cormeilles-en-Parisis — Parisii Optique' && !isset($front_title['site']),
+    'front page keeps the editorial title without a second site name'
+);
 
 $city = parisii_optique_split_city_line('95240 Cormeilles-en-Parisis');
 parisii_assert($city['postal_code'] === '95240' && $city['locality'] === 'Cormeilles-en-Parisis', 'postal code and city are split');
