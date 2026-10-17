@@ -13,6 +13,7 @@
                     <?php
                         parisii_optique_default_image([
                             'id' => 'home-engagements',
+                            'alt' => 'Engagement qualité française de Parisii Optique',
                             'width' => 150,
                             'height' => 150,
                         ]);

@@ -10,12 +10,13 @@
                         <p><strong>Les signes :</strong> Il louche, fronce les sourcils ou se frotte souvent les yeux ?</p>
                         <p><strong>Notre solution :</strong> Des montures morphologiques, incassables et parfaitement adaptées au visage des plus petits.</p>
                         <div>
-                            <a href="<?= home_url('/vision-de-l-enfant'); ?>" class="btn btn-secondary">Protéger la vue de mon enfant</a>
+                            <a href="<?php echo esc_url(parisii_optique_get_page_url('vision-de-l-enfant', '/vision-de-l-enfant/')); ?>" class="btn btn-secondary">Protéger la vue de mon enfant</a>
                         </div>
                     </div>
                     <?php
                         parisii_optique_default_image([
                             'id' => 'home-kids',
+                            'alt' => 'Suivi visuel des enfants chez Parisii Optique',
                         ]);
                     ?>
                 </article>

@@ -12,6 +12,7 @@
                     <?php
                         parisii_optique_default_image([
                             'id' => 'home-solars-danger',
+                            'alt' => 'Lunettes de soleil avec protection UV chez Parisii Optique',
                         ]);
                     ?>
                 </article>
@@ -29,6 +30,7 @@
                         <?php
                             parisii_optique_default_image([
                                 'id' => 'home-solars-quality',
+                                'alt' => 'Lunettes de soleil certifiées CE chez Parisii Optique',
                             ]);
                         ?>
                     </div>

@@ -7,11 +7,8 @@
  */
 
 get_header();
-?>
-<h1 class="sr-only"><?= bloginfo('name'); ?> - <?= bloginfo('description'); ?></h1>
 
-<?php
-  get_template_part('parts/home/hello');
+get_template_part('parts/home/hello');
   get_template_part('parts/home/what-we-do');
   get_template_part('parts/home/get-estimation');
   get_template_part('parts/home/services');

@@ -7,7 +7,7 @@
 
 get_header(); ?>
 
-<main id="main" class="site-main">
+<div class="site-main">
     <section class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
         <header class="page-header mb-12">
             <h1 class="page-title text-4xl md:text-5xl font-heading font-bold text-gray-900 dark:text-white mb-4">
@@ -102,6 +102,6 @@ get_header(); ?>
             </section>
         <?php endif; ?>
     </section>
-</main>
+</div>
 
 <?php get_footer(); ?>
