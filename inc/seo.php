@@ -459,24 +459,25 @@ function parisii_optique_sitemaps_enabled($enabled) {
 add_filter('wp_sitemaps_enabled', 'parisii_optique_sitemaps_enabled');
 
 /**
- * Register sitemap providers once production is known.
+ * Register the default sitemap providers once production is known.
  *
  * Core registers them on init priority 10. If WP_ENVIRONMENT_TYPE is defined
  * later in the same request, that first pass skips every provider and the
- * index stays empty.
+ * index stays empty. A custom provider added on wp_sitemaps_init does not
+ * mean those defaults were registered.
  */
 function parisii_optique_ensure_sitemap_providers() {
-    if (!parisii_is_production() || "0" === (string) get_option("blog_public")) {
-        return;
-    }
-
     $sitemaps = wp_sitemaps_get_server();
-    if ($sitemaps->registry->get_providers()) {
+    if (!$sitemaps->sitemaps_enabled()) {
         return;
     }
 
     $sitemaps->register_sitemaps();
-    add_filter("robots_txt", [$sitemaps, "add_robots"], 0, 2);
+
+    // Priority 0 is a valid hook priority, so a loose check would add the line twice.
+    if (false === has_filter("robots_txt", [$sitemaps, "add_robots"])) {
+        add_filter("robots_txt", [$sitemaps, "add_robots"], 0, 2);
+    }
 }
 add_action("template_redirect", "parisii_optique_ensure_sitemap_providers", 9);
 
