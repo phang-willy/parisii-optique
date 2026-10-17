@@ -3,7 +3,7 @@
  * Plugin Name: Parisii Updates
  * Description: Detecte les mises a jour du theme et des plugins Parisii Optique. L'installation reste manuelle.
  * Update URI: https://updates.phangwilly.com/
- * Version: 1.1.0
+ * Version: 1.2.0
  * Requires at least: 6.8
  * Requires PHP: 8.3
  * Text Domain: parisii-updates
