@@ -73,8 +73,18 @@ jobs:
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
         run: |
+          set -euo pipefail
+          VERSION="${{ steps.plan.outputs.version }}"
           git add style.css package.json parisii-optique-plugin/parisii-optique-plugin.php updates-plugin/parisii-updates.php
-          git commit -m "chore(release): ${{ steps.plan.outputs.version }} [skip ci]"
-          git tag "v${{ steps.plan.outputs.version }}"
-          git push origin HEAD:main
-          git push origin "v${{ steps.plan.outputs.version }}"
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(release): ${VERSION} [skip ci]"
+          fi
+          if git rev-parse -q --verify "refs/tags/v${VERSION}" >/dev/null; then
+            if [ "$(git rev-parse "v${VERSION}^{}")" != "$(git rev-parse HEAD)" ]; then
+              echo "Le tag v${VERSION} pointe vers un autre commit"
+              exit 1
+            fi
+          else
+            git tag "v${VERSION}"
+          fi
+          git push origin HEAD:main "refs/tags/v${VERSION}"

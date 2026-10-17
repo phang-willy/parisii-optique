@@ -76,20 +76,71 @@ jobs:
         run: bash scripts/release/publish-vps.sh
 
       - name: Tag beta release
-        if: steps.plan.outputs.release == 'true'
+        if: success() && steps.plan.outputs.release == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
           GIT_AUTHOR_NAME: github-actions[bot]
           GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
           VERSION: ${{ steps.plan.outputs.version }}
         run: |
-          git add style.css package.json parisii-optique-plugin/parisii-optique-plugin.php updates-plugin/parisii-updates.php
-          git commit -m "chore(release): ${VERSION} [skip ci]"
-          git tag "v${VERSION}"
-          git push origin "HEAD:refs/heads/release/${VERSION}"
-          git push origin "v${VERSION}"
-          if ! gh pr view "release/${VERSION}" --json number --jq .number >/dev/null 2>&1; then
-            gh pr create --base pre-prod --head "release/${VERSION}" --title "chore(release): ${VERSION}" --body "La version ${VERSION} est publiee sur le canal beta. Cette pull request aligne les numeros de version du depot."
+          set -euo pipefail
+          REMOTE_BRANCH="refs/remotes/origin/release/${VERSION}"
+          if git fetch origin "refs/heads/release/${VERSION}:${REMOTE_BRANCH}"; then
+            echo "La branche release/${VERSION} existe deja"
+          else
+            git add style.css package.json parisii-optique-plugin/parisii-optique-plugin.php updates-plugin/parisii-updates.php
+            git commit -m "chore(release): ${VERSION} [skip ci]"
+            git push origin "HEAD:refs/heads/release/${VERSION}"
+            git update-ref "${REMOTE_BRANCH}" HEAD
           fi
+          if git rev-parse -q --verify "refs/tags/v${VERSION}" >/dev/null; then
+            if [ "$(git rev-parse "v${VERSION}^{}")" != "$(git rev-parse "${REMOTE_BRANCH}^{}")" ]; then
+              echo "Le tag v${VERSION} pointe vers un autre commit"
+              exit 1
+            fi
+          else
+            git tag "v${VERSION}" "${REMOTE_BRANCH}"
+          fi
+
+      - name: Open version pull request
+        if: always() && steps.plan.conclusion == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git fetch origin pre-prod
+          git fetch origin "+refs/heads/release/*:refs/remotes/origin/release/*" || true
+          found=0
+          while read -r branch; do
+            [ -n "$branch" ] || continue
+            found=1
+            if git merge-base --is-ancestor "origin/${branch}" origin/pre-prod; then
+              echo "${branch} est deja dans pre-prod"
+              continue
+            fi
+            if ! existing="$(gh pr list --head "$branch" --base pre-prod --state open --json number --jq '.[0].number')"; then
+              echo "GitHub a refuse la lecture des pull requests. Dans Settings > Actions > General, coche Allow GitHub Actions to create and approve pull requests."
+              exit 1
+            fi
+            if [ -n "$existing" ]; then
+              echo "Pull request #${existing} deja ouverte pour ${branch}"
+              continue
+            fi
+            version="${branch#release/}"
+            if ! gh pr create --base pre-prod --head "$branch" --title "chore(release): ${version}" --body "La version ${version} est publiee sur le canal beta. Cette pull request aligne les numeros de version du depot."; then
+              echo "GitHub a refuse la pull request. Dans Settings > Actions > General, coche Allow GitHub Actions to create and approve pull requests."
+              exit 1
+            fi
+          done < <(git for-each-ref --format='%(refname:strip=3)' refs/remotes/origin/release)
+          if [ "$found" -eq 0 ]; then
+            echo "Aucune branche release a aligner"
+          fi
+
+      - name: Push beta tag
+        if: success() && steps.plan.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          set -euo pipefail
+          git push origin "refs/tags/v${VERSION}"
