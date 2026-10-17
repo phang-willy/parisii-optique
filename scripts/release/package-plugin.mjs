@@ -1,8 +1,8 @@
-import { spawnSync } from "node:child_process";
 import { cpSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeZip } from "./create-zip.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -43,16 +43,7 @@ export function packagePlugin(slug, sourceRelative, mainFile, version, output) {
 
     mkdirSync(dirname(output), { recursive: true });
     rmSync(output, { force: true });
-    const zip = spawnSync("tar", ["-a", "-c", "-f", output, "-C", stage, slug], { stdio: "inherit" });
-    if (zip.status !== 0) {
-        throw new Error(`Creation du ZIP impossible pour ${slug}`);
-    }
-
-    const listing = spawnSync("tar", ["-tf", output], { encoding: "utf8" });
-    if (listing.status !== 0) {
-        throw new Error(`Lecture du ZIP impossible pour ${slug}`);
-    }
-    const entries = listing.stdout.split(/\r?\n/).filter(Boolean).map((entry) => entry.replace(/\\/g, "/"));
+    const entries = writeZip(stage, slug, output);
     const required = `${slug}/${mainFile}`;
     if (!entries.includes(required)) {
         throw new Error(`Fichier manquant dans le ZIP: ${required}`);

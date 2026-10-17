@@ -1,8 +1,8 @@
-import { spawnSync } from "node:child_process";
 import { cpSync, mkdirSync, readdirSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeZip } from "./create-zip.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const skipAnywhere = new Set([".git", "node_modules", ".github"]);
@@ -100,16 +100,7 @@ export function packageTheme(version, output) {
 
     mkdirSync(dirname(output), { recursive: true });
     rmSync(output, { force: true });
-    const zip = spawnSync("tar", ["-a", "-c", "-f", output, "-C", stage, "parisii-optique"], { stdio: "inherit" });
-    if (zip.status !== 0) {
-        throw new Error("Creation du ZIP impossible");
-    }
-
-    const listing = spawnSync("tar", ["-tf", output], { encoding: "utf8" });
-    if (listing.status !== 0) {
-        throw new Error("Lecture du ZIP impossible");
-    }
-    const entries = listing.stdout.split(/\r?\n/).filter(Boolean).map((entry) => entry.replace(/\\/g, "/"));
+    const entries = writeZip(stage, "parisii-optique", output);
     const foreign = entries.filter((entry) => entry !== "parisii-optique" && !entry.startsWith("parisii-optique/"));
     if (foreign.length > 0) {
         throw new Error(`Dossier racine inattendu: ${foreign[0]}`);

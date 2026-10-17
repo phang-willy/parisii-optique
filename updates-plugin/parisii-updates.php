@@ -85,6 +85,7 @@ function parisii_updates_filter_theme($update, $theme_data, $theme_stylesheet) {
 
     return array(
         'theme' => 'parisii-optique',
+        'version' => (string) $item['version'],
         'new_version' => (string) $item['version'],
         'url' => 'https://updates.phangwilly.com/',
         'package' => (string) $item['package'],
@@ -130,6 +131,7 @@ function parisii_updates_filter_plugin($update, $plugin_data, $plugin_file) {
     return array(
         'slug' => (string) $item['slug'],
         'plugin' => $plugin_file,
+        'version' => (string) $item['version'],
         'new_version' => (string) $item['version'],
         'url' => 'https://updates.phangwilly.com/',
         'package' => (string) $item['package'],
