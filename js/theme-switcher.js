@@ -10,9 +10,20 @@
     const THEME_KEY = 'parisii-theme';
     const THEMES = ['light', 'dark', 'system'];
     
-    // Get current theme
+    // Get current theme. Migrate the legacy "theme" key without removing it.
     function getTheme() {
-        return localStorage.getItem(THEME_KEY) || 'system';
+        const savedTheme = localStorage.getItem(THEME_KEY);
+        if (THEMES.includes(savedTheme)) {
+            return savedTheme;
+        }
+
+        const legacyTheme = localStorage.getItem('theme');
+        if (THEMES.includes(legacyTheme)) {
+            localStorage.setItem(THEME_KEY, legacyTheme);
+            return legacyTheme;
+        }
+
+        return 'system';
     }
     
     // Set theme

@@ -21,14 +21,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Check PHP syntax
+        run: find . -name '*.php' -not -path './node_modules/*' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+
+      - name: Test hours, maps and canonical helpers
+        run: php tests/run.php
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: "24"
-          cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build theme assets
         run: npm run build
@@ -171,6 +182,7 @@ jobs:
               -X .git \
               -X node_modules \
               -X .github \
+              -X tests \
               -X .gitignore \
               -X package-lock.json \
               -X package.json \

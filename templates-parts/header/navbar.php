@@ -10,8 +10,8 @@
     <a class="skip-link screen-reader-text" href="#main"><?php esc_html_e('Aller au contenu', 'parisii-optique'); ?></a>
     <div class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div class="flex items-center py-2">
-            <a href="" class="text-base lg:text-2xl font-heading font-bold text-gray-900 dark:text-white text-center mx-auto">
-                <h1><?php echo esc_html(get_bloginfo('name')); ?></h1>
+            <a href="<?php echo esc_url(home_url('/')); ?>" class="text-base lg:text-2xl font-heading font-bold text-gray-900 dark:text-white text-center mx-auto">
+                <span><?php echo esc_html(get_bloginfo('name')); ?></span>
             </a>
         </div>
         <div class="flex items-center justify-between">
@@ -29,7 +29,7 @@
                 <?php endif; ?>
             </div>
             
-            <nav class="nav-desktop hidden md:flex items-center flex-row gap-8" role="navigation" aria-label="<?= esc_attr_e('Menu principal desktop', 'parisii-optique'); ?>">
+            <nav class="nav-desktop hidden md:flex items-center flex-row gap-8" role="navigation" aria-label="<?php echo esc_attr__('Menu principal desktop', 'parisii-optique'); ?>">
                 <?php
                 wp_nav_menu([
                     'theme_location' => 'primary',

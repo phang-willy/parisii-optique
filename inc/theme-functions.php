@@ -301,7 +301,7 @@ class Parisii_Optique_Walker_Nav_Menu_Footer extends Walker_Nav_Menu {
         $attributes .= ! empty($item->url)        ? ' href="'   . esc_attr($item->url        ) .'"' : '';
         
         $item_output = isset($args->before) ? $args->before : '';
-        $item_output .= '<a' . $attributes . ' class="text-gray-400 dark:text-gray-400 hover:text-white">';
+        $item_output .= '<a' . $attributes . ' class="text-gray-800 dark:text-gray-200 hover:underline">';
         $item_output .= (isset($args->link_before) ? $args->link_before : '') . apply_filters('the_title', $item->title, $item->ID) . (isset($args->link_after) ? $args->link_after : '');
         $item_output .= '</a>';
         $item_output .= isset($args->after) ? $args->after : '';
@@ -315,7 +315,7 @@ class Parisii_Optique_Walker_Nav_Menu_Footer extends Walker_Nav_Menu {
 }
 
 /**
- * Add customizer settings for footer
+ * Customizer panel for shop information, split into sections.
  */
 function parisii_optique_sanitize_instagram_account($account) {
     $account = sanitize_text_field($account);
@@ -343,116 +343,95 @@ function parisii_optique_sanitize_facebook_url($url) {
     return $url;
 }
 
-function parisii_optique_sanitize_google_maps_embed($html) {
-    return wp_kses($html, [
-        'iframe' => [
-            'src' => true,
-            'width' => true,
-            'height' => true,
-            'style' => true,
-            'allowfullscreen' => true,
-            'loading' => true,
-            'referrerpolicy' => true,
-            'title' => true,
-        ],
-    ]);
-}
 
 function parisii_optique_customize_register_footer($wp_customize) {
-    // Footer Section
-    $wp_customize->add_section('footer_section', [
-        'title' => __('Footer', 'parisii-optique'),
+    $wp_customize->add_panel('parisii_informations_panel', [
+        'title' => __('Informations', 'parisii-optique'),
         'priority' => 40,
     ]);
-    
-    // Footer Description
+
+    $wp_customize->add_section('footer_section', [
+        'title' => __('Footer', 'parisii-optique'),
+        'panel' => 'parisii_informations_panel',
+        'priority' => 10,
+    ]);
+
+    $wp_customize->add_section('contact_section', [
+        'title' => __('Contact', 'parisii-optique'),
+        'panel' => 'parisii_informations_panel',
+        'priority' => 20,
+    ]);
+
+    $wp_customize->add_section('address_section', [
+        'title' => __('Adresse', 'parisii-optique'),
+        'panel' => 'parisii_informations_panel',
+        'priority' => 30,
+    ]);
+
+    $wp_customize->add_section('hours_section', [
+        'title' => __('Horaires', 'parisii-optique'),
+        'panel' => 'parisii_informations_panel',
+        'priority' => 40,
+    ]);
+
+    $wp_customize->add_section('social_section', [
+        'title' => __('Réseaux sociaux', 'parisii-optique'),
+        'panel' => 'parisii_informations_panel',
+        'priority' => 50,
+    ]);
+
     $wp_customize->add_setting('footer_description', [
         'default' => 'Votre partenaire de confiance pour tous vos besoins en optique.',
         'sanitize_callback' => 'sanitize_textarea_field',
     ]);
-    
+
     $wp_customize->add_control('footer_description', [
-        'label' => __('Description du footer', 'parisii-optique'),
+        'label' => __('Description', 'parisii-optique'),
         'section' => 'footer_section',
         'type' => 'textarea',
     ]);
-    
-    // Contact Information
+
     $wp_customize->add_setting('phone_number', [
-        'default' => '+33 1 23 45 67 89',
+        'default' => '01 34 29 05 05',
         'sanitize_callback' => 'sanitize_text_field',
     ]);
-    
+
     $wp_customize->add_control('phone_number', [
         'label' => __('Numéro de téléphone', 'parisii-optique'),
-        'section' => 'footer_section',
+        'section' => 'contact_section',
         'type' => 'text',
     ]);
-    
+
     $wp_customize->add_setting('email_address', [
         'default' => 'contact@parisii-optique.fr',
         'sanitize_callback' => 'sanitize_email',
     ]);
-    
+
     $wp_customize->add_control('email_address', [
         'label' => __('Adresse email', 'parisii-optique'),
-        'section' => 'footer_section',
+        'section' => 'contact_section',
         'type' => 'email',
     ]);
 
-    $wp_customize->add_setting('instagram_account', [
-        'default' => 'parisii.optique',
-        'sanitize_callback' => 'parisii_optique_sanitize_instagram_account',
-    ]);
-
-    $wp_customize->add_control('instagram_account', [
-        'label' => __('Compte Instagram', 'parisii-optique'),
-        'section' => 'footer_section',
-        'type' => 'text',
-    ]);
-
-    $wp_customize->add_setting('facebook_account', [
-        'default' => 'Parisii Optique',
-        'sanitize_callback' => 'parisii_optique_sanitize_facebook_account',
-    ]);
-
-    $wp_customize->add_control('facebook_account', [
-        'label' => __('Compte Facebook', 'parisii-optique'),
-        'section' => 'footer_section',
-        'type' => 'text',
-    ]);
-
-    $wp_customize->add_setting('facebook_url', [
-        'default' => 'https://www.facebook.com/profile.php?id=61574336251763',
-        'sanitize_callback' => 'parisii_optique_sanitize_facebook_url',
-    ]);
-
-    $wp_customize->add_control('facebook_url', [
-        'label' => __('URL Facebook', 'parisii-optique'),
-        'section' => 'footer_section',
-        'type' => 'url',
-    ]);
-    
-    // Address
     $wp_customize->add_setting('address_street', [
         'default' => '12 Véloroute Sequana',
         'sanitize_callback' => 'sanitize_text_field',
     ]);
-    
+
     $wp_customize->add_control('address_street', [
         'label' => __('Adresse (rue)', 'parisii-optique'),
-        'section' => 'footer_section',
+        'section' => 'address_section',
         'type' => 'text',
     ]);
-    
+
     $wp_customize->add_setting('address_city', [
-        'default' => '95249 Cormeilles-en-Parisis',
+        'default' => '95240 Cormeilles-en-Parisis',
         'sanitize_callback' => 'sanitize_text_field',
     ]);
-    
+
     $wp_customize->add_control('address_city', [
         'label' => __('Adresse (ville)', 'parisii-optique'),
-        'section' => 'footer_section',
+        'section' => 'address_section',
         'type' => 'text',
     ]);
 
@@ -464,42 +443,107 @@ function parisii_optique_customize_register_footer($wp_customize) {
     $wp_customize->add_control('google_maps_embed', [
         'label' => __('Iframe Google Maps', 'parisii-optique'),
         'description' => __('Collez ici le code iframe fourni par Google Maps.', 'parisii-optique'),
-        'section' => 'footer_section',
+        'section' => 'address_section',
         'type' => 'textarea',
     ]);
-    
-    // Hours
+
+    // Legacy weekday value is kept in the database and read by the resolver.
+    // It no longer has a control, so saving the Customizer does not wipe it.
     $wp_customize->add_setting('hours_weekdays', [
         'default' => '9h30 - 19h00',
         'sanitize_callback' => 'sanitize_text_field',
     ]);
-    
-    $wp_customize->add_control('hours_weekdays', [
-        'label' => __('Horaires Lun - Ven', 'parisii-optique'),
-        'section' => 'footer_section',
-        'type' => 'text',
-    ]);
-    
-    $wp_customize->add_setting('hours_saturday', [
-        'default' => '10h00 - 19h30',
+
+    $resolved_hours = parisii_optique_get_opening_hours();
+
+    $wp_customize->add_setting('hours_monday', [
+        'default' => $resolved_hours['monday']['label'],
         'sanitize_callback' => 'sanitize_text_field',
     ]);
-    
-    $wp_customize->add_control('hours_saturday', [
-        'label' => __('Horaires Samedi', 'parisii-optique'),
-        'section' => 'footer_section',
+
+    $wp_customize->add_control('hours_monday', [
+        'label' => __('Horaires lundi', 'parisii-optique'),
+        'section' => 'hours_section',
         'type' => 'text',
     ]);
-    
+
+    $wp_customize->add_setting('hours_tuesday_friday', [
+        'default' => $resolved_hours['tuesday']['label'],
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+
+    $wp_customize->add_control('hours_tuesday_friday', [
+        'label' => __('Horaires mardi - vendredi', 'parisii-optique'),
+        'description' => __("L'ancien champ unique est conservé. Une valeur personnalisée reste affichée tant que ces champs ne sont pas enregistrés.", 'parisii-optique'),
+        'section' => 'hours_section',
+        'type' => 'text',
+    ]);
+
+    $wp_customize->add_setting('hours_saturday', [
+        'default' => $resolved_hours['saturday']['label'],
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+
+    $wp_customize->add_control('hours_saturday', [
+        'label' => __('Horaires Samedi', 'parisii-optique'),
+        'section' => 'hours_section',
+        'type' => 'text',
+    ]);
+
     $wp_customize->add_setting('hours_sunday', [
         'default' => 'Fermé',
         'sanitize_callback' => 'sanitize_text_field',
     ]);
-    
+
     $wp_customize->add_control('hours_sunday', [
         'label' => __('Horaires Dimanche', 'parisii-optique'),
-        'section' => 'footer_section',
+        'section' => 'hours_section',
         'type' => 'text',
+    ]);
+
+    $wp_customize->add_setting('hours_exceptional', [
+        'default' => '',
+        'sanitize_callback' => 'sanitize_text_field',
+    ]);
+
+    $wp_customize->add_control('hours_exceptional', [
+        'label' => __('Horaires exceptionnels', 'parisii-optique'),
+        'description' => __("Texte libre, par exemple une fermeture exceptionnelle. Laissez vide s'il n'y en a pas. Ce texte est affiché, mais il n'est pas converti en données structurées.", 'parisii-optique'),
+        'section' => 'hours_section',
+        'type' => 'text',
+    ]);
+
+    $wp_customize->add_setting('instagram_account', [
+        'default' => 'parisii.optique',
+        'sanitize_callback' => 'parisii_optique_sanitize_instagram_account',
+    ]);
+
+    $wp_customize->add_control('instagram_account', [
+        'label' => __('Compte Instagram', 'parisii-optique'),
+        'section' => 'social_section',
+        'type' => 'text',
+    ]);
+
+    $wp_customize->add_setting('facebook_account', [
+        'default' => 'Parisii Optique',
+        'sanitize_callback' => 'parisii_optique_sanitize_facebook_account',
+    ]);
+
+    $wp_customize->add_control('facebook_account', [
+        'label' => __('Compte Facebook', 'parisii-optique'),
+        'section' => 'social_section',
+        'type' => 'text',
+    ]);
+
+    $wp_customize->add_setting('facebook_url', [
+        'default' => 'https://www.facebook.com/profile.php?id=61574336251763',
+        'sanitize_callback' => 'parisii_optique_sanitize_facebook_url',
+    ]);
+
+    $wp_customize->add_control('facebook_url', [
+        'label' => __('URL Facebook', 'parisii-optique'),
+        'section' => 'social_section',
+        'type' => 'url',
     ]);
 }
 add_action('customize_register', 'parisii_optique_customize_register_footer');
