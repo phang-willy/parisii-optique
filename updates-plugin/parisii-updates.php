@@ -193,7 +193,7 @@ function parisii_updates_check_package_root($source, $remote_source, $upgrader, 
     if (in_array($plugin, array('parisii-optique-plugin/parisii-optique-plugin.php', 'updates-plugin/parisii-updates.php'), true)) {
         $expected = dirname($plugin);
     }
-    if ($expected === '') {
+    if ($expected === '' || is_wp_error($source)) {
         return $source;
     }
 
