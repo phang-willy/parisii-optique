@@ -166,44 +166,7 @@ function parisii_optique_setup() {
 }
 add_action('after_setup_theme', 'parisii_optique_setup');
 
-/**
- * Customize document title format
- * Format: Site Title - Page Title (with hierarchy support)
- */
-function parisii_optique_document_title_parts($title) {
-    global $post;
-    
-    // Pour les pages et posts, utiliser notre système SEO
-    if (is_singular() && $post) {
-        $custom_meta_title = get_post_meta($post->ID, '_parisii_meta_title', true);
-        
-        if (!empty($custom_meta_title)) {
-            // Utiliser le titre SEO personnalisé
-            $title['title'] = wp_strip_all_tags($custom_meta_title);
-            unset($title['site']); // Enlever le nom du site pour éviter la duplication
-        } else {
-            // Utiliser le système de hiérarchie par défaut
-            $site_title = get_bloginfo('name');
-            $hierarchy_title = parisii_optique_build_hierarchy_title($post);
-            $title['title'] = $site_title . ' - ' . $hierarchy_title;
-            unset($title['site']);
-        }
-    } elseif (is_front_page()) {
-        // Page d'accueil : Site Title | Tagline
-        return $title;
-    } else {
-        // Autres pages : Site Title - Page Title
-        $site_title = get_bloginfo('name');
-        
-        if (!empty($title['title'])) {
-            $title['title'] = $site_title . ' - ' . $title['title'];
-            unset($title['site']);
-        }
-    }
-    
-    return $title;
-}
-add_filter('document_title_parts', 'parisii_optique_document_title_parts');
+// Document titles are built in inc/seo.php.
 
 /**
  * Change document title separator
@@ -434,7 +397,7 @@ function parisii_optique_customize_register($wp_customize) {
     
     $wp_customize->add_setting('default_theme_mode', [
         'default' => 'system',
-        'sanitize_callback' => 'sanitize_text_field',
+        'sanitize_callback' => 'parisii_optique_sanitize_theme_mode',
     ]);
     
     $wp_customize->add_control('default_theme_mode', [
@@ -458,13 +421,42 @@ function parisii_optique_body_classes($classes) {
 }
 add_filter('body_class', 'parisii_optique_body_classes');
 
+/**
+ * Restrict the theme mode to the three supported values.
+ *
+ * @param string $value Submitted value.
+ * @return string
+ */
+function parisii_optique_sanitize_theme_mode($value) {
+    $value = sanitize_text_field((string) $value);
+
+    return in_array($value, ['light', 'dark', 'system'], true) ? $value : 'system';
+}
+
+/**
+ * Keep jQuery Migrate available for WooCommerce and plugins, without its diagnostic log.
+ *
+ * @param WP_Scripts $scripts Registered scripts.
+ */
+function parisii_optique_mute_jquery_migrate($scripts) {
+    if (is_admin() || empty($scripts->registered['jquery-migrate'])) {
+        return;
+    }
+
+    $scripts->registered['jquery-migrate']->extra['before'][] = 'jQuery.migrateMute=true;';
+}
+add_action('wp_default_scripts', 'parisii_optique_mute_jquery_migrate');
+
 // Include additional files
+require_once get_template_directory() . '/inc/environment.php';
+require_once get_template_directory() . '/inc/helpers-pure.php';
+require_once get_template_directory() . '/inc/opening-hours.php';
+require_once get_template_directory() . '/inc/maps.php';
+require_once get_template_directory() . '/inc/seo.php';
 require_once get_template_directory() . '/inc/theme-functions.php';
 
-// Include WooCommerce functions (only if WooCommerce is active)
-if (class_exists('WooCommerce')) {
-    require_once get_template_directory() . '/inc/woocommerce-functions.php';
-}
+// Placeholder URLs stay available even when WooCommerce is inactive.
+require_once get_template_directory() . '/inc/woocommerce-functions.php';
 
 require_once get_template_directory() . '/inc/theme-switcher.php';
 require_once get_template_directory() . '/inc/deploy-purge.php';
@@ -694,24 +686,29 @@ function parisii_optique_theme_init_script() {
     ?>
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('parisii-theme');
+            const allowedThemes = ['light', 'dark', 'system'];
+            const defaultTheme = '<?php echo esc_js(parisii_optique_sanitize_theme_mode(get_theme_mod('default_theme_mode', 'system'))); ?>';
+            let savedTheme = localStorage.getItem('parisii-theme');
+            const legacyTheme = localStorage.getItem('theme');
             const html = document.documentElement;
+
+            if (!savedTheme && allowedThemes.indexOf(legacyTheme) !== -1) {
+                savedTheme = legacyTheme;
+                localStorage.setItem('parisii-theme', legacyTheme);
+            }
+
+            if (allowedThemes.indexOf(savedTheme) === -1) {
+                savedTheme = allowedThemes.indexOf(defaultTheme) !== -1 ? defaultTheme : 'system';
+                localStorage.setItem('parisii-theme', savedTheme);
+            }
             
-            // Remove any existing theme classes first
             html.classList.remove('light', 'dark');
             
             if (savedTheme && savedTheme !== 'system') {
-                // Use saved theme (light or dark)
                 html.classList.add(savedTheme);
             } else {
-                // No saved theme or system theme - detect device preference
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 html.classList.add(prefersDark ? 'dark' : 'light');
-                
-                // If no saved theme, save as 'system'
-                if (!savedTheme) {
-                    localStorage.setItem('parisii-theme', 'system');
-                }
             }
         })();
     </script>
@@ -1230,104 +1227,7 @@ function parisii_optique_save_seo_meta_box($post_id) {
 }
 add_action('save_post', 'parisii_optique_save_seo_meta_box');
 
-/**
- * Output complete SEO meta tags in frontend head
- */
-function parisii_optique_output_seo_meta_tags() {
-    global $post;
-    
-    $site_title = get_bloginfo('name');
-    $site_description = get_bloginfo('description');
-    $site_url = home_url('/');
-    
-    // Variables par défaut
-    $meta_title = $site_title;
-    $meta_description = $site_description;
-    $og_image = '';
-    
-    // Si c'est une page ou un post
-    if (is_singular() && $post) {
-        $hierarchy_title = parisii_optique_build_hierarchy_title($post);
-        
-        // Meta title
-        $custom_meta_title = get_post_meta($post->ID, '_parisii_meta_title', true);
-        if (!empty($custom_meta_title)) {
-            $meta_title = $custom_meta_title;
-        } else {
-            $meta_title = $site_title . ' - ' . $hierarchy_title;
-        }
-        
-        // Meta description
-        $custom_meta_description = get_post_meta($post->ID, '_parisii_meta_description', true);
-        if (!empty($custom_meta_description)) {
-            $meta_description = $custom_meta_description;
-        } else {
-            $meta_description = $site_title . ' - ' . $hierarchy_title . ' - ' . $site_description;
-        }
-        
-        // OG Image
-        $custom_og_image = get_post_meta($post->ID, '_parisii_og_image', true);
-        if (!empty($custom_og_image)) {
-            $og_image = $custom_og_image;
-        } elseif (has_post_thumbnail($post->ID)) {
-            $og_image = get_the_post_thumbnail_url($post->ID, 'large');
-        }
-    }
-    
-    // Nettoyer et échapper les valeurs
-    $meta_title = wp_strip_all_tags($meta_title);
-    $meta_description = wp_strip_all_tags($meta_description);
-    
-    $meta_title = esc_attr($meta_title);
-    $meta_description = esc_attr($meta_description);
-    $og_image = esc_url($og_image);
-    
-    // Si pas d'image OG, utiliser le logo du site
-    if (empty($og_image) && has_custom_logo()) {
-        $custom_logo_id = get_theme_mod('custom_logo');
-        $og_image = wp_get_attachment_image_url($custom_logo_id, 'large');
-        $og_image = esc_url($og_image);
-    }
-    
-    // Page URL
-    $page_url = is_singular() ? get_permalink($post->ID) : $site_url;
-    $page_url = esc_url($page_url);
-    
-    // Output meta tags
-    echo "\n<!-- SEO Meta Tags -->\n";
-    
-    // Meta description
-    echo '<meta name="description" content="' . $meta_description . '">' . "\n";
-    
-    // Open Graph tags
-    echo '<meta property="og:type" content="' . (is_singular() ? 'article' : 'website') . '">' . "\n";
-    echo '<meta property="og:title" content="' . $meta_title . '">' . "\n";
-    echo '<meta property="og:description" content="' . $meta_description . '">' . "\n";
-    echo '<meta property="og:url" content="' . $page_url . '">' . "\n";
-    echo '<meta property="og:site_name" content="' . esc_attr($site_title) . '">' . "\n";
-    
-    if (!empty($og_image)) {
-        echo '<meta property="og:image" content="' . $og_image . '">' . "\n";
-        echo '<meta property="og:image:width" content="1200">' . "\n";
-        echo '<meta property="og:image:height" content="630">' . "\n";
-        echo '<meta property="og:image:type" content="image/jpeg">' . "\n";
-    }
-    
-    // Twitter Card tags
-    echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
-    echo '<meta name="twitter:title" content="' . $meta_title . '">' . "\n";
-    echo '<meta name="twitter:description" content="' . $meta_description . '">' . "\n";
-    if (!empty($og_image)) {
-        echo '<meta name="twitter:image" content="' . $og_image . '">' . "\n";
-    }
-    
-    // Additional meta tags
-    echo '<meta name="robots" content="index, follow">' . "\n";
-    echo '<link rel="canonical" href="' . $page_url . '">' . "\n";
-    
-    echo "<!-- End SEO Meta Tags -->\n\n";
-}
-add_action('wp_head', 'parisii_optique_output_seo_meta_tags', 1);
+// SEO tags, canonical, robots and local schema are printed from inc/seo.php.
 
 /**
  * Increase upload file size limit to 10MB

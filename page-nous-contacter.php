@@ -20,10 +20,7 @@ get_header();
     </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16">
         <div id="google-maps-embed-wrapper">
-          <?php $google_maps_embed = get_theme_mod('google_maps_embed'); ?>
-          <?php if ($google_maps_embed) : ?>
-            <?php echo $google_maps_embed; ?>
-          <?php endif; ?>
+          <?php parisii_optique_render_maps_embed(); ?>
         </div>
           <div id="parisii-contact-form-wrapper" class="w-full">
               <div id="parisii-contact-alert" class="hidden rounded-lg p-4 mb-6" role="alert" aria-live="polite"></div>

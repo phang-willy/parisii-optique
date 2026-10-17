@@ -63,31 +63,16 @@ function parisii_optique_can_edit_default_image($post_id = 0) {
  * @return array{src:string,srcset:string,width:int,height:int}
  */
 function parisii_optique_default_image_placeholder_attrs() {
-    $uploads_base = untrailingslashit(home_url('/wp-content/uploads'));
-    $files = [
-        '1024x1024' => 'woocommerce-placeholder-1024x1024.webp',
-        '768'       => 'woocommerce-placeholder-768x768.webp',
-        '600'       => 'woocommerce-placeholder-600x600.webp',
-        '300'       => 'woocommerce-placeholder-300x300.webp',
-        '150'       => 'woocommerce-placeholder-150x150.webp',
-        '100'       => 'woocommerce-placeholder-100x100.webp',
-        'full'      => 'woocommerce-placeholder.webp',
-    ];
+    if (!function_exists('parisii_get_placeholder_image')) {
+        return [
+            'src'    => '',
+            'srcset' => '',
+            'width'  => 0,
+            'height' => 0,
+        ];
+    }
 
-    return [
-        'src'    => $uploads_base . '/' . $files['1024x1024'],
-        'srcset' => implode(', ', [
-            $uploads_base . '/' . $files['1024x1024'] . ' 1024w',
-            $uploads_base . '/' . $files['300'] . ' 300w',
-            $uploads_base . '/' . $files['100'] . ' 100w',
-            $uploads_base . '/' . $files['600'] . ' 600w',
-            $uploads_base . '/' . $files['150'] . ' 150w',
-            $uploads_base . '/' . $files['768'] . ' 768w',
-            $uploads_base . '/' . $files['full'] . ' 1200w',
-        ]),
-        'width'  => 1024,
-        'height' => 1024,
-    ];
+    return parisii_get_placeholder_image();
 }
 
 /**
@@ -120,6 +105,8 @@ function parisii_optique_default_image($args = []) {
         'width'        => 1024,
         'height'       => 1024,
         'sizes'        => '(max-width: 1024px) 100vw, 1024px',
+        'loading'      => 'lazy',
+        'fetchpriority'=> '',
         'post_id'      => (int) get_queried_object_id(),
         'editable'     => true,
         'echo'         => true,
@@ -132,6 +119,8 @@ function parisii_optique_default_image($args = []) {
     $alt          = $args['alt'] !== '' ? $args['alt'] : get_bloginfo('name');
     $width        = absint($args['width']) ?: 1024;
     $height       = absint($args['height']) ?: 1024;
+    $loading      = in_array($args['loading'], ['lazy', 'eager'], true) ? $args['loading'] : 'lazy';
+    $fetchpriority = in_array($args['fetchpriority'], ['high', 'low', 'auto'], true) ? $args['fetchpriority'] : '';
 
     $figure_classes = trim($args['figure_class'] . ' parisii-default-image' . ($editable ? ' is-editable' : ''));
 
@@ -153,33 +142,56 @@ function parisii_optique_default_image($args = []) {
     >
         <?php if ($attachment_id && wp_attachment_is_image($attachment_id)) : ?>
             <?php
+            $image_attrs = [
+                'class'    => $args['class'],
+                'alt'      => $alt !== '' ? $alt : (string) get_post_meta($attachment_id, '_wp_attachment_image_alt', true),
+                'decoding' => 'async',
+                'loading'  => $loading,
+            ];
+            if ((int) $args['width'] !== 1024 || (int) $args['height'] !== 1024) {
+                $image_attrs['width'] = $width;
+                $image_attrs['height'] = $height;
+            }
+            if ($fetchpriority !== '') {
+                $image_attrs['fetchpriority'] = $fetchpriority;
+            }
             echo wp_get_attachment_image(
                 $attachment_id,
                 $args['size'],
                 false,
-                [
-                    'class'    => $args['class'],
-                    'alt'      => $alt !== '' ? $alt : (string) get_post_meta($attachment_id, '_wp_attachment_image_alt', true),
-                    'decoding' => 'async',
-                    'width'    => $width,
-                    'height'   => $height,
-                ]
+                $image_attrs
             );
             ?>
         <?php else : ?>
             <?php
             $placeholder = parisii_optique_default_image_placeholder_attrs();
+            $placeholder_width = ((int) $args['width'] === 1024 && (int) $args['height'] === 1024 && !empty($placeholder['width']))
+                ? (int) $placeholder['width']
+                : $width;
+            $placeholder_height = ((int) $args['width'] === 1024 && (int) $args['height'] === 1024 && !empty($placeholder['height']))
+                ? (int) $placeholder['height']
+                : $height;
             ?>
+            <?php if (!empty($placeholder['src'])) : ?>
             <img
                 decoding="async"
-                width="<?php echo esc_attr((string) $width); ?>"
-                height="<?php echo esc_attr((string) $height); ?>"
+                loading="<?php echo esc_attr($loading); ?>"
+                <?php if ($fetchpriority !== '') : ?>
+                    fetchpriority="<?php echo esc_attr($fetchpriority); ?>"
+                <?php endif; ?>
+                <?php if ($placeholder_width > 0 && $placeholder_height > 0) : ?>
+                    width="<?php echo esc_attr((string) $placeholder_width); ?>"
+                    height="<?php echo esc_attr((string) $placeholder_height); ?>"
+                <?php endif; ?>
                 src="<?php echo esc_url($placeholder['src']); ?>"
                 alt="<?php echo esc_attr($alt); ?>"
                 class="<?php echo esc_attr($args['class']); ?>"
-                srcset="<?php echo esc_attr($placeholder['srcset']); ?>"
-                sizes="<?php echo esc_attr($args['sizes']); ?>"
+                <?php if (!empty($placeholder['srcset'])) : ?>
+                    srcset="<?php echo esc_attr($placeholder['srcset']); ?>"
+                    sizes="<?php echo esc_attr($args['sizes']); ?>"
+                <?php endif; ?>
             >
+            <?php endif; ?>
         <?php endif; ?>
 
         <?php if ($editable) : ?>

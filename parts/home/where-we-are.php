@@ -3,25 +3,24 @@
     <h2 class="text-center mb-8">Où nous trouver ?</h2>
     <div class="grid md:grid-cols-2 gap-6">
       <article>
-        <div id="google-maps-embed-wrapper" class="w-full h-112.5">
-          <?php $google_maps_embed = get_theme_mod('google_maps_embed'); ?>
-          <?php if ($google_maps_embed) : ?>
-            <?php echo $google_maps_embed; ?>
-          <?php endif; ?>
+        <div id="google-maps-embed-wrapper" class="w-full h-112.5 overflow-hidden">
+          <?php
+          $parisii_maps_iframe = parisii_optique_maps_iframe_markup();
+          if ($parisii_maps_iframe !== '') {
+              echo $parisii_maps_iframe; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- sanitized iframe.
+          }
+          ?>
         </div>
+        <?php parisii_optique_render_maps_link(); ?>
       </article>
       <div class="flex flex-col gap-16 justify-center">
         <article class="flex flex-col gap-1">
           <h3>Adresse :</h3>
-          <p><?php echo get_theme_mod('address_street', '12 Véloroute Sequana'); ?>, <?php echo get_theme_mod('address_city', '95240 Cormeilles-en-Parisis'); ?></p>
+          <p><?php echo esc_html(get_theme_mod('address_street', '12 Véloroute Sequana')); ?>, <?php echo esc_html(get_theme_mod('address_city', '95240 Cormeilles-en-Parisis')); ?></p>
         </article>
         <article class="flex flex-col gap-1">
           <h3>Horaires :</h3>
-          <ul>
-            <li>Du Lundi au vendredi de <?php echo get_theme_mod('hours_weekdays', '9h30 - 19h00'); ?></li>
-            <li>Le samedi de <?php echo get_theme_mod('hours_saturday', '10h00 - 19h30'); ?></li>
-            <li>Dimanche <?php echo get_theme_mod('hours_sunday', 'Fermé'); ?></li>
-          </ul>
+          <?php parisii_optique_render_opening_hours('home'); ?>
         </article>
       </div>
     </div>

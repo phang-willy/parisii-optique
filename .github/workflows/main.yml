@@ -24,6 +24,18 @@ jobs:
           # Full history lets git-restore-mtime set realistic file mtimes → mirror --only-newer skips unchanged files.
           fetch-depth: 0
 
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Check PHP syntax
+        run: find . -name '*.php' -not -path './node_modules/*' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+
+      - name: Test hours, maps and canonical helpers
+        run: php tests/run.php
+
       - name: Restore git file mtimes (incremental SFTP)
         if: github.event_name == 'push'
         uses: chetan/git-restore-mtime-action@v2
@@ -155,6 +167,7 @@ jobs:
               -X .git \
               -X node_modules \
               -X .github \
+              -X tests \
               -X .gitignore \
               -X package-lock.json \
               -X package.json \
@@ -237,6 +250,7 @@ jobs:
                 -X .git \
                 -X node_modules \
                 -X .github \
+              -X tests \
                 -X .gitignore \
                 -X package-lock.json \
                 -X package.json \
