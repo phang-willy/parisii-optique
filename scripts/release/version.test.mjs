@@ -6,6 +6,7 @@ import {
     highestBump,
     nextBetaVersion,
     parseCommit,
+    shouldCutBeta,
     renderPackageVersion,
     renderPluginHeader,
     renderStyleHeader,
@@ -28,6 +29,9 @@ test("stable bumps stay on the current major", () => {
     assert.equal(bumpVersion("1.2.3", "minor"), "1.3.0");
     assert.equal(nextBetaVersion("1.3.0", ["v1.3.0-beta.1", "v1.3.0-beta.2", "v1.2.4-beta.4"]), "1.3.0-beta.3");
     assert.equal(nextBetaVersion("1.2.4", []), "1.2.4-beta.1");
+    assert.equal(shouldCutBeta(0, []), true);
+    assert.equal(shouldCutBeta(1, ["chore(release): 1.1.0-beta.1 [skip ci]"]), false);
+    assert.equal(shouldCutBeta(1, ["fix: correct a price"]), true);
 });
 
 test("manual major must move forward and resets minor and patch", () => {
