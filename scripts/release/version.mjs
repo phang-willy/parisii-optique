@@ -99,7 +99,7 @@ export function bumpVersion(version, level) {
  * @param {string[]} tags
  * @returns {string}
  */
-export function nextBetaVersion(version, tags) {
+export function latestBetaNumber(version, tags) {
     const pattern = new RegExp(`^v${version.replace(/\./g, "\\.")}-beta\\.(\\d+)$`);
     let max = 0;
     for (const tag of tags) {
@@ -108,7 +108,18 @@ export function nextBetaVersion(version, tags) {
             max = Math.max(max, Number(match[1]));
         }
     }
-    return `${version}-beta.${max + 1}`;
+    return max;
+}
+
+export function nextBetaVersion(version, tags) {
+    return `${version}-beta.${latestBetaNumber(version, tags) + 1}`;
+}
+
+export function shouldCutBeta(existingBetaNumber, commitsAfterBeta) {
+    if (!Number.isInteger(existingBetaNumber) || existingBetaNumber < 1) {
+        return true;
+    }
+    return highestBump(commitsAfterBeta) !== "none";
 }
 
 /**
@@ -255,6 +266,19 @@ function plan(channel, major) {
     }
 
     const next = bumpVersion(stable.version, bump);
+    if (channel === "beta") {
+        const existingBeta = latestBetaNumber(next, tags);
+        const commitsAfterBeta = existingBeta > 0 ? commitsSince(`v${next}-beta.${existingBeta}`) : [];
+        if (!shouldCutBeta(existingBeta, commitsAfterBeta)) {
+            return {
+                release: false,
+                version: "",
+                tag: "",
+                channel,
+                reason: `Deja publie: v${next}-beta.${existingBeta}`,
+            };
+        }
+    }
     const version = channel === "beta" ? nextBetaVersion(next, tags) : next;
     if (tags.includes(`v${version}`)) {
         throw new Error(`Le tag v${version} existe deja`);
