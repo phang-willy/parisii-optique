@@ -10,7 +10,7 @@
                     <p><strong>Essilor</strong> : Entreprise française depuis 1849 et No 1 mondial des verres de lunettes. Choisir Essilor c'est choisir l'excellence et l'innovation. Les chercheurs ont recours à l'intelligence artificielle pour développer les verres de lunettes de demain.</p>
                     <p><strong>Pour garantir la transparence et l'authenticité de vos verres, nous vous remettons un certificat nominatif mentionnant la marque et les caractéristiques de vos verres.</strong></p>
                 </article>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 justify-center items-center">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 justify-center items-center">
                     <?php
                         parisii_optique_default_image([
                             'id' => 'home-partners-novacel',

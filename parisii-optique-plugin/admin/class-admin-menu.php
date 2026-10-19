@@ -11,10 +11,18 @@ if (!defined('ABSPATH')) {
 }
 
 class Parisii_Optique_Admin_Menu {
+
+    /**
+     * Set when brand creation fails before the admin page renders.
+     *
+     * @var bool
+     */
+    public static $brand_create_error = false;
     
     public function __construct() {
         add_action('admin_menu', array($this, 'add_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        add_action('admin_init', array($this, 'handle_brand_create'));
         add_action('admin_init', array($this, 'handle_brand_delete_confirmation'));
         add_action('admin_init', array($this, 'handle_plugin_update'));
     }
@@ -216,6 +224,49 @@ class Parisii_Optique_Admin_Menu {
         } else {
             echo '<div class="notice notice-error"><p>' . __('ID de marque manquant.', 'parisii-optique-plugin') . '</p></div>';
         }
+    }
+
+    /**
+     * Create a brand before the admin page renders, then open its edit screen.
+     */
+    public function handle_brand_create() {
+        if (
+            !isset($_POST['parisii_optique_brand_nonce'], $_GET['page'], $_GET['tab']) ||
+            $_GET['page'] !== 'parisii-optique-brands' ||
+            $_GET['tab'] !== 'add'
+        ) {
+            return;
+        }
+
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Vous n\'avez pas les permissions nécessaires.', 'parisii-optique-plugin'));
+        }
+
+        check_admin_referer('parisii_optique_save_brand', 'parisii_optique_brand_nonce');
+
+        $new_id = Parisii_Optique_Brand::create(array(
+            'name' => isset($_POST['brand_name']) ? sanitize_text_field(wp_unslash($_POST['brand_name'])) : '',
+            'logo' => isset($_POST['brand_logo']) ? esc_url_raw(wp_unslash($_POST['brand_logo'])) : '',
+            'visible' => isset($_POST['brand_visible']) ? 1 : 0,
+            'kids' => isset($_POST['brand_kids']) ? 1 : 0,
+            'sport' => isset($_POST['brand_sport']) ? 1 : 0,
+        ));
+
+        if (!$new_id) {
+            self::$brand_create_error = true;
+            return;
+        }
+
+        wp_safe_redirect(add_query_arg(
+            array(
+                'page' => 'parisii-optique-brands',
+                'tab' => 'edit',
+                'id' => $new_id,
+                'created' => '1',
+            ),
+            admin_url('admin.php')
+        ));
+        exit;
     }
 
     /**
