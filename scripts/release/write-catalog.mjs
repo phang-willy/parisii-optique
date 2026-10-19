@@ -27,7 +27,6 @@ export function writeCatalog(directory, channel, version) {
     const sha256 = (name) => createHash("sha256").update(readFileSync(join(directory, name))).digest("hex");
     const themeName = file("parisii-optique");
     const brandName = file("parisii-optique-plugin");
-    const updatesName = file("updates-plugin");
     const catalog = {
         channel,
         released_at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
@@ -46,13 +45,6 @@ export function writeCatalog(directory, channel, version) {
                 version,
                 package: `${base}/${brandName}`,
                 sha256: sha256(brandName),
-            },
-            {
-                slug: "updates-plugin",
-                file: "updates-plugin/parisii-updates.php",
-                version,
-                package: `${base}/${updatesName}`,
-                sha256: sha256(updatesName),
             },
         ],
     };
