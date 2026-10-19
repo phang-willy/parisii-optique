@@ -1,4 +1,4 @@
-<section id="anti-lumiere-bleue">
+<section id="anti-lumiere-bleue" class="bg-section-1">
     <div class="w-full max-w-7xl mx-auto px-4 py-8 md:px-6 md:py-12 lg:px-8 lg:py-16">
       <div class="flex flex-col gap-8 items-center">
         <h2 class="text-center">Anti-Lumière Bleue :</h2>

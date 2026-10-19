@@ -10,7 +10,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 require dirname(__DIR__) . '/inc/helpers-pure.php';
-require dirname(__DIR__) . '/updates-plugin/version-rules.php';
+require dirname(__DIR__) . '/inc/updates-version-rules.php';
 
 $failures = 0;
 

@@ -20,6 +20,20 @@ function parisii_optique_default_image_meta_key($id) {
 }
 
 /**
+ * Previous slot id kept only so an existing image survives a spelling fix.
+ *
+ * @param string $id Current slot id.
+ * @return string
+ */
+function parisii_optique_default_image_legacy_slot($id) {
+    $legacy = [
+        'verres-photochromiques-transitions' => 'verres-photochromatiques-transitions',
+    ];
+
+    return $legacy[$id] ?? '';
+}
+
+/**
  * Get saved attachment ID for a slot.
  *
  * @param string $id      Slot id.
@@ -36,6 +50,27 @@ function parisii_optique_get_default_image_id($id, $post_id = 0) {
         $post_id = (int) get_queried_object_id();
     }
 
+    $attachment_id = parisii_optique_read_default_image_id($id, $post_id);
+    if ($attachment_id) {
+        return $attachment_id;
+    }
+
+    $legacy = parisii_optique_default_image_legacy_slot($id);
+    if (!$legacy) {
+        return 0;
+    }
+
+    return parisii_optique_read_default_image_id($legacy, $post_id);
+}
+
+/**
+ * Read one slot without looking at a renamed predecessor.
+ *
+ * @param string $id      Slot id.
+ * @param int    $post_id Post ID, or 0 for the theme mod.
+ * @return int
+ */
+function parisii_optique_read_default_image_id($id, $post_id) {
     if ($post_id > 0) {
         return absint(get_post_meta($post_id, parisii_optique_default_image_meta_key($id), true));
     }
@@ -274,6 +309,11 @@ function parisii_optique_ajax_save_default_image() {
         update_post_meta($post_id, $meta_key, $attachment_id);
     } else {
         delete_post_meta($post_id, $meta_key);
+    }
+
+    $legacy = parisii_optique_default_image_legacy_slot($slot_id);
+    if ($legacy) {
+        delete_post_meta($post_id, parisii_optique_default_image_meta_key($legacy));
     }
 
     $html = parisii_optique_default_image([

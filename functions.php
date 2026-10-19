@@ -449,6 +449,7 @@ add_action('wp_default_scripts', 'parisii_optique_mute_jquery_migrate');
 
 // Include additional files
 require_once get_template_directory() . '/inc/environment.php';
+require_once get_template_directory() . '/inc/updates.php';
 require_once get_template_directory() . '/inc/helpers-pure.php';
 require_once get_template_directory() . '/inc/opening-hours.php';
 require_once get_template_directory() . '/inc/maps.php';
