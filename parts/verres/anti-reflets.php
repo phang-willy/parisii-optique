@@ -41,10 +41,9 @@
   if (isset($rows[0][0]) && is_array($rows[0][0])) {
       $rows = $rows[0];
   }
-  $last_row = count($rows) - 1;
 ?>
 
-<section id="verres-anti-reflets" class="bg-section-1 dark:text-black">
+<section id="verres-anti-reflets">
   <div class="w-full max-w-7xl mx-auto px-4 py-8 md:px-6 md:py-12 lg:px-8 lg:py-16">
     <h2 class="text-center mb-8">Verres Anti-Reflets</h2>
     <div class="grid grid-cols-1 gap-8">
@@ -76,22 +75,21 @@
       </div>
     </div>
     <div class="mt-8 flex flex-col gap-6">
-      <h3 class="text-center">Caractéristique de votre nouveau verre :</h3>
+      <h3 class="text-center">Caractéristiques du nouveau verre :</h3>
       <div class="overflow-x-auto">
         <table class="w-full table-fixed text-center border border-black">
           <thead>
-            <tr class="border-b border-black">
+            <tr class="border-b border-black bg-slate-400">
               <?php foreach ($columns as $column) : ?>
-                <th scope="col" class="py-3 px-2 font-semibold uppercase hidden md:table-cell bg-section-2"><?php echo esc_html($column); ?></th>
+                <th scope="col" class="py-3 px-2 font-semibold uppercase hidden md:table-cell"><?php echo esc_html($column); ?></th>
               <?php endforeach; ?>
             </tr>
           </thead>
           <tbody>
             <?php foreach ($rows as $row_index => $row) : ?>
-              <?php $is_even_row = $row_index % 2 === 1; ?>
-              <tr<?php echo $row_index < $last_row ? ' class="border-b border-black"' : ""; ?>>
+              <tr class="border-b border-black even:bg-slate-100">
                 <?php foreach ($row as $cell_index => $cell) : ?>
-                  <td class="py-2 px-1 md:py-4 md:px-2 block md:table-cell text-left md:text-center<?php echo $is_even_row ? " bg-section-2" : ""; ?>" data-cell="<?php echo esc_attr($columns[$cell_index] ?? ""); ?>"><?php echo esc_html($cell); ?></td>
+                  <td class="py-2 px-1 md:py-4 md:px-2 block md:table-cell text-left md:text-center" data-cell="<?php echo esc_attr($columns[$cell_index] ?? ""); ?>"><?php echo esc_html($cell); ?></td>
                 <?php endforeach; ?>
               </tr>
             <?php endforeach; ?>
