@@ -29,6 +29,7 @@ define('PARISII_OPTIQUE_PLUGIN_URL', plugin_dir_url(__FILE__));
 function parisii_optique_plugin_activate() {
     require_once PARISII_OPTIQUE_PLUGIN_PATH . 'includes/class-database.php';
     Parisii_Optique_Database::create_tables();
+    Parisii_Optique_Database::maybe_upgrade_brand_table();
     
     // Flush rewrite rules for custom templates
     flush_rewrite_rules();

@@ -93,25 +93,76 @@ class Parisii_Optique_Brand_Display {
     }
     
     /**
-     * Render brands grid
+     * Visible brands query shared by the grid and the existence check.
      */
-    public static function render_brands_grid($props = array()) {
+    private static function query_args($props = array()) {
         $props = wp_parse_args(
             $props,
             array(
                 'kids' => null,
+                'sports' => null,
             )
         );
 
         $args = array(
             'visible_only' => true,
-            'orderby'      => 'name',
-            'order'        => 'ASC',
         );
 
         if ($props['kids'] === true) {
             $args['kids'] = 1;
         }
+
+        if ($props['sports'] === true) {
+            $args['sport'] = 1;
+        }
+
+        return $args;
+    }
+
+    /**
+     * Whether at least one visible brand matches the props.
+     * No props counts every visible brand.
+     */
+    public static function has_brands($props = array()) {
+        if (!class_exists('Parisii_Optique_Brand')) {
+            return false;
+        }
+
+        return (int) Parisii_Optique_Brand::count(self::query_args($props)) > 0;
+    }
+
+    /**
+     * Names of the visible brands matching the props.
+     *
+     * @return string[]
+     */
+    public static function get_brand_names($props = array()) {
+        if (!class_exists('Parisii_Optique_Brand')) {
+            return array();
+        }
+
+        $args = self::query_args($props);
+        $args['orderby'] = 'name';
+        $args['order'] = 'ASC';
+
+        $names = array();
+        foreach (Parisii_Optique_Brand::get_all($args) as $brand) {
+            $name = trim((string) $brand->name);
+            if ($name !== '') {
+                $names[] = $name;
+            }
+        }
+
+        return $names;
+    }
+
+    /**
+     * Render brands grid
+     */
+    public static function render_brands_grid($props = array()) {
+        $args = self::query_args($props);
+        $args['orderby'] = 'name';
+        $args['order'] = 'ASC';
 
         $brands = Parisii_Optique_Brand::get_all($args);
         

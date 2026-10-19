@@ -9,7 +9,7 @@
                 </div>
                 <div class="flex md:flex-row flex-col gap-4">
                     <a href="<?php echo esc_url(parisii_optique_get_page_url('nous-contacter', '/nous-contacter/')); ?>" class="btn btn-primary">Prendre Rendez-vous</a>
-                    <a href="<?php echo esc_url(parisii_optique_get_page_url('marques', '/marques/')); ?>" class="btn btn-secondary">Voir nos collections et marques</a>
+                    <a href="<?php echo esc_url(parisii_optique_get_page_url('marques', '/marques/')); ?>" class="btn btn-secondary">Retrouvez vos marques préférées</a>
                 </div>
             </div>
             <div>

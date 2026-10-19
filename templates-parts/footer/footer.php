@@ -108,11 +108,11 @@
                 <div class="text-sm text-gray-800 dark:text-gray-400 text-center md:text-left">
                     © <?php echo date('Y'); ?> <?php bloginfo('name'); ?>. Tous droits réservés.
                 </div>
-                <div class="flex flex-wrap justify-center md:justify-start flex-row gap-6 text-sm text-gray-800 dark:text-gray-200">
+                <div class="block w-full md:w-auto md:flex flex-wrap justify-center md:justify-start flex-col md:flex-row gap-6 text-sm text-gray-800 dark:text-gray-200">
                     <?php
                     wp_nav_menu([
                         'theme_location' => 'footer',
-                        'menu_class' => 'flex flex-row gap-6 nav-footer list-none',
+                        'menu_class' => 'flex flex-col md:flex-row gap-6 nav-footer list-none',
                         'container' => false,
                         'fallback_cb' => false,
                         'walker' => new Parisii_Optique_Walker_Nav_Menu_Footer(),

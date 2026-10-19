@@ -17,13 +17,7 @@ get_header();
             <article>
                 <h3>Pour tout le monde :</h3>
                 <p>Nous proposons un large éventail de marques de lunettes pour hommes, femmes et enfants.</p>
-                <p>Venez découvrir nos collections en magasin.</p>
-            </article>
-            <article>
-                <h3>Pour les sportifs et sportives :</h3>
-                <p>Les amateurs de sport et athlètes ne sont pas en reste ! <?php echo get_the_title(); ?> met à votre disposition une gamme de lunettes spécialement conçues pour les activités physiques.</p>
-                <p>Pour vous permettre d'effectuer votre activité favorite sans faire l'impasse sur votre confort visuel, notre collection sport inclut des modèles robustes et performants, adaptés à diverses disciplines telles que la course, le cyclisme, ou les sports aquatiques.</p>
-                <p>Ces lunettes sont conçues pour offrir un confort optimal, une résistance accrue, et une visibilité parfaite, même dans les conditions les plus exigeantes.</p>
+                <p>Venez découvrir vos marques préférées en magasin.</p>
             </article>
         </div>
         <?php Parisii_Optique_Brand_Display::render_brands_grid(); ?>

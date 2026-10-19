@@ -27,6 +27,7 @@ class Parisii_Optique_Brand_Form {
             'logo' => esc_url_raw($_POST['brand_logo']),
             'visible' => isset($_POST['brand_visible']) ? 1 : 0,
             'kids' => isset($_POST['brand_kids']) ? 1 : 0,
+            'sport' => isset($_POST['brand_sport']) ? 1 : 0,
         );
         
         if ($brand_id) {
@@ -37,15 +38,8 @@ class Parisii_Optique_Brand_Form {
             } else {
                 echo '<div class="notice notice-error is-dismissible"><p>' . __('Erreur lors de la mise à jour de la marque.', 'parisii-optique-plugin') . '</p></div>';
             }
-        } else {
-            // Create new brand
-            $new_id = Parisii_Optique_Brand::create($data);
-            if ($new_id) {
-                echo '<div class="notice notice-success is-dismissible"><p>' . __('Marque créée avec succès.', 'parisii-optique-plugin') . ' <a href="' . add_query_arg(array('tab' => 'edit', 'id' => $new_id), admin_url('admin.php?page=parisii-optique-brands')) . '">' . __('Modifier', 'parisii-optique-plugin') . '</a></p></div>';
-                $brand_id = $new_id;
-            } else {
-                echo '<div class="notice notice-error is-dismissible"><p>' . __('Erreur lors de la création de la marque.', 'parisii-optique-plugin') . '</p></div>';
-            }
+        } elseif (Parisii_Optique_Admin_Menu::$brand_create_error) {
+            echo '<div class="notice notice-error is-dismissible"><p>' . __('Erreur lors de la création de la marque.', 'parisii-optique-plugin') . '</p></div>';
         }
         
         return $brand_id;
@@ -108,6 +102,11 @@ class Parisii_Optique_Brand_Form {
         $logo = $brand ? $brand->logo : '';
         $visible = $brand ? $brand->visible : 1;
         $kids = $brand ? (isset($brand->kids) ? $brand->kids : 0) : 0;
+        $sport = $brand ? (isset($brand->sport) ? $brand->sport : 0) : 0;
+
+        if ($brand_id && isset($_GET['created']) && absint($_GET['created']) === 1 && !isset($_POST['parisii_optique_brand_nonce'])) {
+            echo '<div class="notice notice-success is-dismissible"><p>' . __('Marque créée avec succès.', 'parisii-optique-plugin') . '</p></div>';
+        }
         
         ?>
         <div class="wrap">
@@ -161,6 +160,17 @@ class Parisii_Optique_Brand_Form {
                             <label for="brand_kids">
                                 <input type="checkbox" id="brand_kids" name="brand_kids" value="1" <?php checked($kids, 1); ?>>
                                 <?php _e('Afficher cette marque dans la selection enfant', 'parisii-optique-plugin'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="brand_sport"><?php _e('Marque sport', 'parisii-optique-plugin'); ?></label>
+                        </th>
+                        <td>
+                            <label for="brand_sport">
+                                <input type="checkbox" id="brand_sport" name="brand_sport" value="1" <?php checked($sport, 1); ?>>
+                                <?php _e('Afficher cette marque dans la selection sport', 'parisii-optique-plugin'); ?>
                             </label>
                         </td>
                     </tr>

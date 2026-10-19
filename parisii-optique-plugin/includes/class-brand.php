@@ -24,6 +24,7 @@ class Parisii_Optique_Brand {
             'order' => 'ASC',
             'visible_only' => false,
             'kids' => null,
+            'sport' => null,
             'search' => '',
             'offset' => 0,
             'limit' => 999999,
@@ -40,6 +41,10 @@ class Parisii_Optique_Brand {
         if ($args['kids'] !== null) {
             $where[] = 'kids = ' . (absint($args['kids']) ? '1' : '0');
         }
+
+        if ($args['sport'] !== null) {
+            $where[] = 'sport = ' . (absint($args['sport']) ? '1' : '0');
+        }
         
         if (!empty($args['search'])) {
             $search = esc_sql($wpdb->esc_like($args['search']));
@@ -48,7 +53,7 @@ class Parisii_Optique_Brand {
         
         $where_clause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
         
-        $allowed_orderby = array('id', 'name', 'visible', 'kids');
+        $allowed_orderby = array('id', 'name', 'visible', 'kids', 'sport');
         $orderby = in_array($args['orderby'], $allowed_orderby, true) ? $args['orderby'] : 'name';
         $order = strtoupper($args['order']) === 'DESC' ? 'DESC' : 'ASC';
         $offset = absint($args['offset']);
@@ -84,6 +89,7 @@ class Parisii_Optique_Brand {
             'logo' => '',
             'visible' => 1,
             'kids' => 0,
+            'sport' => 0,
         );
         
         $data = wp_parse_args($data, $defaults);
@@ -95,8 +101,9 @@ class Parisii_Optique_Brand {
                 'logo' => esc_url_raw($data['logo']),
                 'visible' => absint($data['visible']),
                 'kids' => absint($data['kids']),
+                'sport' => absint($data['sport']),
             ),
-            array('%s', '%s', '%d', '%d')
+            array('%s', '%s', '%d', '%d', '%d')
         );
         
         if ($result === false) {
@@ -133,6 +140,11 @@ class Parisii_Optique_Brand {
 
         if (isset($data['kids'])) {
             $update_data['kids'] = absint($data['kids']);
+            $format[] = '%d';
+        }
+
+        if (isset($data['sport'])) {
+            $update_data['sport'] = absint($data['sport']);
             $format[] = '%d';
         }
         
@@ -173,6 +185,14 @@ class Parisii_Optique_Brand {
         
         if (!empty($args['visible_only'])) {
             $where[] = 'visible = 1';
+        }
+
+        if (isset($args['kids']) && $args['kids'] !== null) {
+            $where[] = 'kids = ' . (absint($args['kids']) ? '1' : '0');
+        }
+
+        if (isset($args['sport']) && $args['sport'] !== null) {
+            $where[] = 'sport = ' . (absint($args['sport']) ? '1' : '0');
         }
         
         if (!empty($args['search'])) {

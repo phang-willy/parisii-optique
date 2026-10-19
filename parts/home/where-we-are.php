@@ -1,4 +1,4 @@
-<section id="where-we-are" class="bg-[#c5b68d]">
+<section id="where-we-are" class="bg-section-2">
   <div class="w-full max-w-7xl mx-auto px-4 py-8 md:px-6 md:py-12 lg:px-8 lg:py-16 text-black">
     <h2 class="text-center mb-8">Où nous trouver ?</h2>
     <div class="grid md:grid-cols-2 gap-6">

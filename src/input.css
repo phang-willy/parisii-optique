@@ -36,12 +36,42 @@
 }
 
 :root {
-  --color-main: #94644d;
-  --color-main-hover: #392b1f;
-  --color-main-focus: #392b1f;
+  color-scheme: light;
+  --color-main: #c8705c;
+  --color-main-hover: #794439;
+  --color-main-focus: #794439;
   --color-secondary: #c5b68d;
   --color-secondary-hover: #aa9e7c;
   --color-secondary-focus: #978c6d;
+  --color-section-1: #d9c9ae;
+  --color-section-2: #c5b68d;
+}
+
+/* Light bands stay light in private windows, where the browser theme is dark. */
+.bg-section-1,
+.bg-section-2 {
+  color: #000;
+  color-scheme: light;
+}
+
+.bg-section-1 {
+  background-color: var(--color-section-1);
+}
+
+.bg-section-2 {
+  background-color: var(--color-section-2);
+}
+
+#verres-anti-reflets td::before {
+  content: attr(data-cell) ": ";
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+@media (min-width: 768px) {
+  #verres-anti-reflets td::before {
+    content: none;
+  }
 }
 
 @utility aspect-ratio-220-125 {
@@ -553,6 +583,10 @@ body {
 
 .parisii-default-image {
   @apply relative;
+}
+
+.parisii-default-image.aligncenter img {
+  @apply mx-auto;
 }
 
 .parisii-default-image.is-editable:hover .parisii-default-image__toolbar,
