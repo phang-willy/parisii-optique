@@ -1,19 +1,35 @@
 <?php
 /**
- * Plugin Name: Parisii Updates
- * Description: Detecte les mises a jour du theme et des plugins Parisii Optique. L'installation reste manuelle.
- * Update URI: https://updates.phangwilly.com/
- * Version: 1.0.0
- * Requires at least: 6.8
- * Requires PHP: 8.3
- * Text Domain: parisii-updates
+ * Theme and companion-plugin updates. Shipped with the theme, not as a third plugin.
+ *
+ * @package Parisii_Optique
  */
 
 if (!defined('ABSPATH')) {
     exit;
 }
 
-require_once __DIR__ . '/version-rules.php';
+/**
+ * Turn off the former standalone updater once the theme provides it.
+ */
+function parisii_updates_retire_legacy_plugin() {
+    $legacy = 'updates-plugin/parisii-updates.php';
+    if (!function_exists('is_plugin_active') || !function_exists('deactivate_plugins')) {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+    if (!is_plugin_active($legacy)) {
+        return;
+    }
+
+    deactivate_plugins($legacy, true);
+}
+add_action('admin_init', 'parisii_updates_retire_legacy_plugin');
+
+if (function_exists('parisii_updates_filter_theme')) {
+    return;
+}
+
+require_once __DIR__ . '/updates-version-rules.php';
 
 /**
  * Channel selected from wp-config.php, outside the theme directory.
@@ -162,11 +178,7 @@ add_filter('auto_update_theme', 'parisii_updates_disable_auto_update', 10, 2);
  */
 function parisii_updates_disable_plugin_auto_update($update, $item) {
     $plugin = isset($item->plugin) ? (string) $item->plugin : '';
-    $manual = array(
-        'parisii-optique-plugin/parisii-optique-plugin.php',
-        'updates-plugin/parisii-updates.php',
-    );
-    if (in_array($plugin, $manual, true)) {
+    if ($plugin === 'parisii-optique-plugin/parisii-optique-plugin.php') {
         return false;
     }
 
@@ -190,7 +202,7 @@ function parisii_updates_check_package_root($source, $remote_source, $upgrader, 
         $expected = 'parisii-optique';
     }
     $plugin = isset($hook_extra['plugin']) ? (string) $hook_extra['plugin'] : '';
-    if (in_array($plugin, array('parisii-optique-plugin/parisii-optique-plugin.php', 'updates-plugin/parisii-updates.php'), true)) {
+    if ($plugin === 'parisii-optique-plugin/parisii-optique-plugin.php') {
         $expected = dirname($plugin);
     }
     if ($expected === '' || is_wp_error($source)) {
@@ -240,12 +252,12 @@ function parisii_updates_admin_notice() {
 
     $channel = parisii_updates_channel();
     if ($channel === '') {
-        echo '<div class="notice notice-warning"><p>Parisii Updates : WP_ENVIRONMENT_TYPE ne selectionne aucun canal. Aucune mise a jour ne sera proposee.</p></div>';
+        echo '<div class="notice notice-warning"><p>Parisii Optique : WP_ENVIRONMENT_TYPE ne selectionne aucun canal. Aucune mise a jour ne sera proposee.</p></div>';
         return;
     }
 
     $url = wp_nonce_url(admin_url('admin-post.php?action=parisii_updates_check'), 'parisii_updates_check');
-    echo '<div class="notice notice-info"><p>Parisii Updates consulte le canal ' . esc_html($channel) . '. ';
+    echo '<div class="notice notice-info"><p>Parisii Optique consulte le canal ' . esc_html($channel) . '. ';
     echo '<a class="button" href="' . esc_url($url) . '">Verifier les mises a jour</a></p></div>';
 }
 add_action('admin_notices', 'parisii_updates_admin_notice');

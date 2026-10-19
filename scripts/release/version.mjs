@@ -298,7 +298,6 @@ function apply(version) {
     writeFileSync(packagePath, renderPackageVersion(readFileSync(packagePath, "utf8"), version));
     for (const relativePath of [
         "parisii-optique-plugin/parisii-optique-plugin.php",
-        "updates-plugin/parisii-updates.php",
     ]) {
         const pluginPath = join(root, relativePath);
         writeFileSync(pluginPath, renderPluginHeader(readFileSync(pluginPath, "utf8"), version));

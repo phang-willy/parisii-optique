@@ -57,7 +57,6 @@ jobs:
           mkdir -p release-artifacts
           node scripts/release/package-theme.mjs --version "$VERSION" --output "release-artifacts/parisii-optique-${VERSION}.zip"
           node scripts/release/package-plugin.mjs --slug parisii-optique-plugin --source parisii-optique-plugin --main parisii-optique-plugin.php --version "$VERSION" --output "release-artifacts/parisii-optique-plugin-${VERSION}.zip"
-          node scripts/release/package-plugin.mjs --slug updates-plugin --source updates-plugin --main parisii-updates.php --version "$VERSION" --output "release-artifacts/updates-plugin-${VERSION}.zip"
           node scripts/release/write-catalog.mjs --dir release-artifacts --channel stable --version "$VERSION"
 
       - name: Publish stable
@@ -84,7 +83,7 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${{ steps.plan.outputs.version }}"
-          git add style.css package.json parisii-optique-plugin/parisii-optique-plugin.php updates-plugin/parisii-updates.php
+          git add style.css package.json parisii-optique-plugin/parisii-optique-plugin.php
           if ! git diff --cached --quiet; then
             git commit -m "chore(release): ${VERSION} [skip ci]"
           fi

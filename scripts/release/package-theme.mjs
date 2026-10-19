@@ -10,7 +10,6 @@ const skipTop = new Set([
     "tests",
     "src",
     "scripts",
-    "updates-plugin",
     "package.json",
     "package-lock.json",
     "webpack.config.js",
