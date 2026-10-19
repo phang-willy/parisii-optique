@@ -14,11 +14,10 @@ get_header();
 <?php
   get_template_part('parts/verres/hello');
   get_template_part('parts/verres/incontournables');
-  get_template_part('parts/verres/solaires-et-adaptatives');
   get_template_part('parts/verres/anti-reflets');
   get_template_part('parts/verres/anti-lumiere-bleue');
   get_template_part('parts/verres/teintes-polarisants');
-  get_template_part('parts/verres/photochromatiques-transitions');
+  get_template_part('parts/verres/photochromiques-transitions');
   get_template_part('parts/verres/filtre-medical');
 ?>
 
