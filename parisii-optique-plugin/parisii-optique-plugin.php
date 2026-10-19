@@ -3,7 +3,7 @@
  * Plugin Name: Parisii Optique
  * Plugin URI: https://parisii-optique.fr
  * Description: Plugin de gestion des marques pour Parisii Optique
- * Version: 1.2.0-beta.1
+ * Version: 1.3.0-beta.1
  * Update URI: https://updates.phangwilly.com/
  * Author: Parisii Optique
  * Author URI: https://parisii-optique.fr
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('PARISII_OPTIQUE_PLUGIN_VERSION', '1.2.0-beta.1');
+define('PARISII_OPTIQUE_PLUGIN_VERSION', '1.3.0-beta.1');
 define('PARISII_OPTIQUE_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('PARISII_OPTIQUE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
