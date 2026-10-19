@@ -1,6 +1,6 @@
 <section id="verres-photochromiques-transitions">
   <div class="w-full max-w-7xl mx-auto px-4 py-8 md:px-6 md:py-12 lg:px-8 lg:py-16">
-    <h2 class="text-center mb-8">Verres Photochromatiques et Transitions</h2>
+    <h2 class="text-center mb-8">Verres Photochromiques et Transitions</h2>
     <div class="grid grid-cols-1 gap-8">
       <div class="grid md:grid-cols-2 gap-6">
         <figure class="order-2 md:order-1">
