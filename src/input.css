@@ -394,7 +394,7 @@ a:hover, a:focus {
   }
 }
 
-.dark {
+html.dark {
   color-scheme: dark;
 }
 

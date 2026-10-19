@@ -23,9 +23,13 @@
           <h3>À trouver en magasin :</h3>
           <div class="flex flex-col gap-2">
             <?php
-              $sport_brand_names = class_exists('Parisii_Optique_Brand_Display')
-                ? Parisii_Optique_Brand_Display::get_brand_names(['sports' => true])
-                : array();
+              $sport_brand_names = array();
+              if (
+                  class_exists('Parisii_Optique_Brand_Display')
+                  && method_exists('Parisii_Optique_Brand_Display', 'get_brand_names')
+              ) {
+                  $sport_brand_names = Parisii_Optique_Brand_Display::get_brand_names(['sports' => true]);
+              }
             ?>
             <?php if (!$sport_brand_names) : ?>
               <p>Marques de sports non disponibles en magasin actuellement.</p>

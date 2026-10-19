@@ -10,7 +10,7 @@
         <figure>
           <?php
             parisii_optique_default_image([ 
-              'id' => 'verres-teintes-polarisants',
+              'id' => 'verres-polarisants',
               'alt' => 'Verres teintés polarisants chez Parisii Optique',
             ]);
           ?>
@@ -20,7 +20,7 @@
         <figure class="order-2 md:order-1">
           <?php
             parisii_optique_default_image([
-              'id' => 'verres-photochromiques-transitions',
+              'id' => 'verres-transitions',
               'alt' => 'Verres photochromiques transitions chez Parisii Optique',
             ]);
           ?>
