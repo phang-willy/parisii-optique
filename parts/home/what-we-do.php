@@ -1,4 +1,4 @@
-<section id="what-we-do" class="bg-[#d9c9ae]">
+<section id="what-we-do" class="bg-section-1">
     <div class="w-full max-w-7xl mx-auto px-4 py-8 md:px-6 md:py-12 lg:px-8 lg:py-16">
         <div class="grid md:grid-cols-2 gap-6 text-black">
             <article class="grid grid-cols-1 gap-4">

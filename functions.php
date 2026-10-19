@@ -688,18 +688,29 @@ function parisii_optique_theme_init_script() {
         (function() {
             const allowedThemes = ['light', 'dark', 'system'];
             const defaultTheme = '<?php echo esc_js(parisii_optique_sanitize_theme_mode(get_theme_mod('default_theme_mode', 'system'))); ?>';
-            let savedTheme = localStorage.getItem('parisii-theme');
-            const legacyTheme = localStorage.getItem('theme');
             const html = document.documentElement;
+            let savedTheme = null;
+            let legacyTheme = null;
+
+            try {
+                savedTheme = localStorage.getItem('parisii-theme');
+                legacyTheme = localStorage.getItem('theme');
+            } catch (error) {
+                savedTheme = null;
+            }
 
             if (!savedTheme && allowedThemes.indexOf(legacyTheme) !== -1) {
                 savedTheme = legacyTheme;
-                localStorage.setItem('parisii-theme', legacyTheme);
+                try {
+                    localStorage.setItem('parisii-theme', legacyTheme);
+                } catch (error) {}
             }
 
             if (allowedThemes.indexOf(savedTheme) === -1) {
                 savedTheme = allowedThemes.indexOf(defaultTheme) !== -1 ? defaultTheme : 'system';
-                localStorage.setItem('parisii-theme', savedTheme);
+                try {
+                    localStorage.setItem('parisii-theme', savedTheme);
+                } catch (error) {}
             }
             
             html.classList.remove('light', 'dark');

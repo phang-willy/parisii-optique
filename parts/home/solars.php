@@ -1,4 +1,4 @@
-<section id="solars" class="bg-[#d9c9ae]">
+<section id="solars" class="bg-section-1">
     <div class="w-full max-w-7xl mx-auto px-4 py-8 md:px-6 md:py-12 lg:px-8 lg:py-16">
         <div class="grid grid-cols-1 gap-8 text-black">
             <h2 class="text-center">Lunettes de soleil</h2>
