@@ -83,8 +83,8 @@ function parisii_optique_default_image_placeholder_attrs() {
  *
  *     @type string $id           Unique slot id (required to persist a replacement).
  *     @type string $alt          Image alt text. Default: site name / attachment alt.
- *     @type string $class        Img class attribute. Default: 'wp-image-40'.
- *     @type string $figure_class Figure class attribute. Default: 'wp-block-image size-large'.
+ *     @type string $class        Img class attribute. Default: 'wp-image-40 mx-auto'.
+ *     @type string $figure_class Figure class attribute. Default: 'wp-block-image size-large aligncenter'.
  *     @type string $size         Attachment size when a custom image is set. Default: 'large'.
  *     @type int    $width        Img width attribute. Default: 1024.
  *     @type int    $height       Img height attribute. Default: 1024.
@@ -99,8 +99,8 @@ function parisii_optique_default_image($args = []) {
     $args = wp_parse_args($args, [
         'id'           => '',
         'alt'          => '',
-        'class'        => 'wp-image-40',
-        'figure_class' => 'wp-block-image size-large',
+        'class'        => 'wp-image-40 mx-auto',
+        'figure_class' => 'wp-block-image size-large aligncenter',
         'size'         => 'large',
         'width'        => 1024,
         'height'       => 1024,
@@ -282,8 +282,8 @@ function parisii_optique_ajax_save_default_image() {
         'width'        => isset($_POST['width']) ? absint($_POST['width']) : 1024,
         'height'       => isset($_POST['height']) ? absint($_POST['height']) : 1024,
         'size'         => isset($_POST['size']) ? sanitize_key(wp_unslash($_POST['size'])) : 'large',
-        'class'        => isset($_POST['class']) ? sanitize_text_field(wp_unslash($_POST['class'])) : 'wp-image-40',
-        'figure_class' => isset($_POST['figure_class']) ? sanitize_text_field(wp_unslash($_POST['figure_class'])) : 'wp-block-image size-large',
+        'class'        => isset($_POST['class']) ? sanitize_text_field(wp_unslash($_POST['class'])) : 'wp-image-40 mx-auto',
+        'figure_class' => isset($_POST['figure_class']) ? sanitize_text_field(wp_unslash($_POST['figure_class'])) : 'wp-block-image size-large aligncenter',
         'alt'          => isset($_POST['alt']) ? sanitize_text_field(wp_unslash($_POST['alt'])) : '',
         'editable'     => true,
         'echo'         => false,

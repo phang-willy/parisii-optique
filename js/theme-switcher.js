@@ -11,15 +11,29 @@
     const THEMES = ['light', 'dark', 'system'];
     
     // Get current theme. Migrate the legacy "theme" key without removing it.
+    function readStorage(key) {
+        try {
+            return localStorage.getItem(key);
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function writeStorage(key, value) {
+        try {
+            localStorage.setItem(key, value);
+        } catch (error) {}
+    }
+
     function getTheme() {
-        const savedTheme = localStorage.getItem(THEME_KEY);
+        const savedTheme = readStorage(THEME_KEY);
         if (THEMES.includes(savedTheme)) {
             return savedTheme;
         }
 
-        const legacyTheme = localStorage.getItem('theme');
+        const legacyTheme = readStorage('theme');
         if (THEMES.includes(legacyTheme)) {
-            localStorage.setItem(THEME_KEY, legacyTheme);
+            writeStorage(THEME_KEY, legacyTheme);
             return legacyTheme;
         }
 
@@ -30,7 +44,7 @@
     function setTheme(theme) {
         if (!THEMES.includes(theme)) return;
         
-        localStorage.setItem(THEME_KEY, theme);
+        writeStorage(THEME_KEY, theme);
         applyTheme(theme);
         updateUI();
     }

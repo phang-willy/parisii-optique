@@ -1,4 +1,50 @@
-<section id="verres-anti-reflets" class="bg-[#d9c9ae] dark:text-black">
+<?php 
+  $table = [
+    "head" => [
+      "couche" => "Couche graphene",
+      "caractéristiques" => "Caractéristiques",
+      "avantages" => "Avantages",
+    ],
+    "body" => [
+      [
+        [
+          "Superhydrophobe",
+          "Répulsion de l'eau",
+          "Facilite le nettoyage",
+        ],
+        [
+          "Antistatique",
+          "Verre électrostatiquement neutre",
+          "Évite l'adhésion de poussière",
+        ],
+        [
+          "Oléophobe",
+          "Répulsion des corps gras",
+          "Facilite l'entretien",
+        ],
+        [
+          "Antireflet",
+          "Optimisation de la transmission de la lumière",
+          "Qualité et confort visuel incomparable",
+        ],
+        [
+          "Anti UV face avant et arrière",
+          "Réflexion des UV",
+          "Minimise l'exposition de l'œil aux rayonnements",
+        ],
+      ],
+    ],
+  ];
+
+  $columns = array_values($table["head"]);
+  $rows = $table["body"];
+  if (isset($rows[0][0]) && is_array($rows[0][0])) {
+      $rows = $rows[0];
+  }
+  $last_row = count($rows) - 1;
+?>
+
+<section id="verres-anti-reflets" class="bg-section-1 dark:text-black">
   <div class="w-full max-w-7xl mx-auto px-4 py-8 md:px-6 md:py-12 lg:px-8 lg:py-16">
     <h2 class="text-center mb-8">Verres Anti-Reflets</h2>
     <div class="grid grid-cols-1 gap-8">
@@ -34,40 +80,24 @@
       <div class="overflow-x-auto">
         <table class="w-full table-fixed text-center border border-black">
           <thead>
-            <tr class="border-b-2 border-black">
-              <th scope="col" class="py-3 px-2 font-semibold uppercase">Couches graphene</th>
-              <th scope="col" class="py-3 px-2 font-semibold uppercase">Caractéristiques</th>
-              <th scope="col" class="py-3 px-2 font-semibold uppercase">Avantages</th>
+            <tr class="border-b border-black">
+              <?php foreach ($columns as $column) : ?>
+                <th scope="col" class="py-3 px-2 font-semibold uppercase hidden md:table-cell bg-section-2"><?php echo esc_html($column); ?></th>
+              <?php endforeach; ?>
             </tr>
           </thead>
           <tbody>
-            <tr class="border-b border-black">
-              <td class="py-4 px-2">Superhydrophobe</td>
-              <td class="py-4 px-2">Répulsion de l'eau</td>
-              <td class="py-4 px-2">Facilite le nettoyage</td>
-            </tr>
-            <tr class="border-b border-black">
-              <td class="py-4 px-2">Antistatique</td>
-              <td class="py-4 px-2">Verre électrostatiquement neutre</td>
-              <td class="py-4 px-2">Évite l'adhésion de poussière</td>
-            </tr>
-            <tr class="border-b border-black">
-              <td class="py-4 px-2">Oléophobe</td>
-              <td class="py-4 px-2">Répulsion des corps gras</td>
-              <td class="py-4 px-2">Facilite l'entretien</td>
-            </tr>
-            <tr class="border-b border-black">
-              <td class="py-4 px-2">Antireflet</td>
-              <td class="py-4 px-2">Optimisation de la transmission de la lumière</td>
-              <td class="py-4 px-2">Qualité et confort visuel incomparable</td>
-            </tr>
-            <tr>
-              <td class="py-4 px-2">Anti UV face avant et arrière</td>
-              <td class="py-4 px-2">Réflexion des UV</td>
-              <td class="py-4 px-2">Minimise l'exposition de l'œil aux rayonnements</td>
-            </tr>
+            <?php foreach ($rows as $row_index => $row) : ?>
+              <?php $is_even_row = $row_index % 2 === 1; ?>
+              <tr<?php echo $row_index < $last_row ? ' class="border-b border-black"' : ""; ?>>
+                <?php foreach ($row as $cell_index => $cell) : ?>
+                  <td class="py-2 px-1 md:py-4 md:px-2 block md:table-cell text-left md:text-center<?php echo $is_even_row ? " bg-section-2" : ""; ?>" data-cell="<?php echo esc_attr($columns[$cell_index] ?? ""); ?>"><?php echo esc_html($cell); ?></td>
+                <?php endforeach; ?>
+              </tr>
+            <?php endforeach; ?>
           </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   </div>
 </section>

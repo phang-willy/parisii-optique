@@ -22,12 +22,21 @@ function parisii_optique_theme_switcher_script() {
             const html = document.documentElement;
             const allowedThemes = ['light', 'dark', 'system'];
             const defaultTheme = '<?php echo esc_js(parisii_optique_sanitize_theme_mode(get_theme_mod('default_theme_mode', 'system'))); ?>';
-            let currentTheme = localStorage.getItem('parisii-theme');
-            const legacyTheme = localStorage.getItem('theme');
+            let currentTheme = null;
+            let legacyTheme = null;
+
+            try {
+                currentTheme = localStorage.getItem('parisii-theme');
+                legacyTheme = localStorage.getItem('theme');
+            } catch (error) {
+                currentTheme = null;
+            }
 
             if (!currentTheme && allowedThemes.indexOf(legacyTheme) !== -1) {
                 currentTheme = legacyTheme;
-                localStorage.setItem('parisii-theme', legacyTheme);
+                try {
+                    localStorage.setItem('parisii-theme', legacyTheme);
+                } catch (error) {}
             }
             if (allowedThemes.indexOf(currentTheme) === -1) {
                 currentTheme = allowedThemes.indexOf(defaultTheme) !== -1 ? defaultTheme : 'system';
@@ -58,7 +67,9 @@ function parisii_optique_theme_switcher_script() {
                     const isDark = html.classList.contains('dark');
                     const newTheme = isDark ? 'light' : 'dark';
                     
-                    localStorage.setItem('parisii-theme', newTheme);
+                    try {
+                        localStorage.setItem('parisii-theme', newTheme);
+                    } catch (error) {}
                     applyTheme(newTheme);
                     
                     // Update button icon
@@ -68,7 +79,13 @@ function parisii_optique_theme_switcher_script() {
             
             // Listen for system theme changes
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
-                if (localStorage.getItem('parisii-theme') === 'system' || !localStorage.getItem('parisii-theme')) {
+                let storedTheme = null;
+                try {
+                    storedTheme = localStorage.getItem('parisii-theme');
+                } catch (error) {
+                    storedTheme = null;
+                }
+                if (storedTheme === 'system' || !storedTheme) {
                     applyTheme('system');
                 }
             });

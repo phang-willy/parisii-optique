@@ -43,7 +43,8 @@ class Parisii_Optique_Database {
     }
 
     /**
-     * Add kids column if missing (existing installs).
+     * Add kids and sport columns if missing (existing installs).
+     * Only adds the column. Existing rows are kept.
      */
     public static function maybe_upgrade_brand_table() {
         global $wpdb;
@@ -57,6 +58,12 @@ class Parisii_Optique_Database {
         if (empty($col)) {
             $wpdb->query("ALTER TABLE `$table` ADD COLUMN kids tinyint(1) DEFAULT 0 AFTER visible");
             $wpdb->query("UPDATE `$table` SET kids = 0 WHERE kids IS NULL");
+        }
+
+        $sport_col = $wpdb->get_results($wpdb->prepare("SHOW COLUMNS FROM `$table` LIKE %s", 'sport'));
+        if (empty($sport_col)) {
+            $wpdb->query("ALTER TABLE `$table` ADD COLUMN sport tinyint(1) DEFAULT 0 AFTER kids");
+            $wpdb->query("UPDATE `$table` SET sport = 0 WHERE sport IS NULL");
         }
     }
     
@@ -76,6 +83,7 @@ class Parisii_Optique_Database {
             logo varchar(500) DEFAULT NULL,
             visible tinyint(1) DEFAULT 1,
             kids tinyint(1) DEFAULT 0,
+            sport tinyint(1) DEFAULT 0,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
